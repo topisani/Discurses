@@ -1,3 +1,4 @@
 discord.py
-nose2
+urwid
+pytest
 pyyaml
