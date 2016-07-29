@@ -1,65 +1,57 @@
 import asyncio
+from typing import List
 
 import discord
+from discord import Channel, Message
 
 import config
 import ui
 
-client = discord.Client(token=config.table['token'], bot=False)
-client_is_ready = False
-loop = asyncio.get_event_loop()
 
-event_handlers = {"on_message": []}
+class DiscordClient(discord.Client):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ui = ui.MainUI(self)
+        self.event_handlers = {
+            "on_message": [],
+            "on_message_edit": [],
+            "on_message_delete": []
+        }
 
+    def add_event_handler(self, event: str, f):
+        self.event_handlers[event].append(f)
 
-@client.event
-async def on_ready():
-    ui.notify("Logged in as %s" % client.user.name)
-    ui.on_ready()
+    async def on_ready(self):
+        self.ui.notify("Logged in as %s" % self.user.name)
+        self.ui.on_ready()
 
+    async def on_message(self, m: Message):
+        for f in self.event_handlers['on_message']:
+            f(m)
 
-@client.event
-async def on_message(m):
-    ui.notify("Event handlers for on_message: %d" % len(event_handlers['on_message'])) 
-    for f in event_handlers['on_message']:
-        ui.notify("called event handler for on_message")
-        ui.loop(0.1, f, m)
+    async def on_message_edit(self, before: Message, after: Message):
+        for f in self.event_handlers['on_message_edit']:
+            f(before, after)
 
+    async def on_message_delete(self, m: Message):
+        for f in self.event_handlers['on_message_delete']:
+            f(m)
 
-async def main_task():
-    await client.login(config.table['token'], bot=False)
-    await client.connect()
+    async def login(self):
+        await super().login(config.table['token'], bot=False)
 
+    def async(self, f):
+        self.loop.create_task(f)
 
-def send_message(channel, message):
-    client.loop.create_task(client.send_message(channel, message))
-
-
-def get_logs(channel):
-    return []
-
-
-async def get_those_logs(channel):
-    messages = []
-    async for message in client.logs_from(channel):
-        messages.append(message)
-    return messages
-
-
-def run_discord_client():
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(main_task())
-    except:
-        loop.run_until_complete(client.logout())
-    finally:
-        loop.close()
-
-
-def main():
-    ui.init()
-    run_discord_client()
+    async def get_logs_from(self, channel: Channel) -> List[Message]:
+        messages = []
+        print("getting logs")
+        async for m in self.logs_from(channel, limit=20):
+            messages.append(m)
+        print("got logs")
+        return messages
 
 
 if __name__ == '__main__':
-    main()
+    client = DiscordClient()
+    client.run()
