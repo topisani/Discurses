@@ -1,17 +1,15 @@
 """
 Everything UI
 """
-import asyncio
 import datetime
 import sys
 from typing import List
 
 import urwid
-import discord
 from discord import Channel, Message
 
-import config
 from main import DiscordClient
+
 
 class MainUI:
     palette = [
@@ -27,7 +25,9 @@ class MainUI:
         self.discord = discord_client
         header = urwid.AttrMap(urwid.Text("Logging in"), "head")
         self.frame = urwid.Frame(
-            urwid.Filler(urwid.Text("""
+            urwid.Filler(
+                urwid.Text(
+                    """
  ___________________________ 
 < Logging in... Hang tight! >
  --------------------------- 
@@ -37,7 +37,9 @@ class MainUI:
                 ||----w |    
                 ||     ||    
 
-        """, align=urwid.CENTER)), header=header)
+        """,
+                    align=urwid.CENTER)),
+            header=header)
         self.urwid_loop = urwid.MainLoop(
             self.frame,
             palette=MainUI.palette,
@@ -90,7 +92,8 @@ class ChatWidget(urwid.WidgetWrap):
 
         self.message_list = MessageListWidget(self.discord, self, channels)
         self.edit_message = MessageEditWidget(self.discord, self, send_channel)
-        self.frame = urwid.Pile([('weight', 1, self.message_list), ('pack', self.edit_message)], 1)
+        self.frame = urwid.Pile(
+            [('weight', 1, self.message_list), ('pack', self.edit_message)], 1)
         self.__super.__init__(self.frame)
 
 
@@ -320,13 +323,11 @@ class MessageEditWidget(urwid.WidgetWrap):
             return
         if self.editing is not None:
             self.discord.async(
-                self.discord.edit_message(self.editing,
-                                          self.edit.edit_text))
+                self.discord.edit_message(self.editing, self.edit.edit_text))
             self.stop_edit()
         else:
             self.discord.async(
-                self.discord.send_message(self.channel,
-                                          self.edit.edit_text))
+                self.discord.send_message(self.channel, self.edit.edit_text))
 
     def keypress(self, size, key):
         if key == "enter":
@@ -345,7 +346,8 @@ class MessageEditWidget(urwid.WidgetWrap):
                 if self.editing is not None:
                     self.stop_edit()
                 else:
-                    self.chat_widget.frame.edit_message.set_focus(self.chat_widget.message_list)
+                    self.chat_widget.frame.edit_message.set_focus(
+                        self.chat_widget.message_list)
 
     def edit_message(self, message: Message):
         self.caption.set_text("\n Edit ")
@@ -370,7 +372,8 @@ class TopReachedWidget(urwid.WidgetWrap):
         self.chat_widget = chat_widget
         self.message = FakeMessage()
         self._selectable = False
-        txt = urwid.Text("""
+        txt = urwid.Text(
+            """
 
         
  _____                        
@@ -387,6 +390,7 @@ Congratiulations! You have reached the top, Thats awesome! Unless the channel is
             align=urwid.CENTER)
         w = urwid.Padding(txt, left=5, right=5)
         self.__super.__init__(w)
+
 
 class FakeMessage:
     """Very much a temporary thing"""
