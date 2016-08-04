@@ -2,6 +2,7 @@
 Everything UI
 """
 import datetime
+import re
 import sys
 from typing import List
 
@@ -46,6 +47,7 @@ class MainUI:
 
     def __init__(self, discord_client: DiscordClient):
         self.discord = discord_client
+        self.tabs = []
         header = urwid.AttrMap(urwid.Text("Logging in"), "head")
         self.frame = urwid.Frame(
             urwid.Filler(
@@ -63,10 +65,6 @@ class MainUI:
         """,
                     align=urwid.CENTER)),
             header=header)
-        self.pop_up = urwid.Frame(urwid.WidgetPlaceholder(None))
-        self.pop_up_overlay = urwid.Overlay(
-            urwid.LineBox(self.pop_up), self.frame, 'center', ('relative', 60),
-            'middle', ('relative', 60))
         self.urwid_loop = urwid.MainLoop(
             self.frame,
             palette=MainUI.palette,
@@ -83,9 +81,19 @@ class MainUI:
         self.urwid_loop.start()
 
     def _keypress(self, input):
+        if input is None:
+            return
         if input in ("Q"):
             self.urwid_loop.stop()
             raise urwid.ExitMainLoop()
+        match = re.fullmatch("meta ([0-9])", input)
+        if match is not None:
+            index = int(match.group(1))
+            self.notify("Tab: {0}".format(index))
+            if index == 0:
+                index = 10
+            self.set_body(self.tabs[index - 1])
+        
 
     def set_body(self, w):
         self.frame.set_body(w)
@@ -99,21 +107,10 @@ class MainUI:
         self.urwid_loop.draw_screen()
 
     def on_ready(self):
-        channels = [self.discord.get_channel(str(cid)) for cid in sys.argv[1:]]
-        assert channels is not None
-        self.set_body(ChatWidget(self.discord, channels, None))
+        for i in range(0, 9):
+            self.tabs.append(ChatWidget(self.discord, [], None))
+        self.set_body(self.tabs[0])
 
-    def open_pop_up(self, widget, header=None, footer=None):
-        self.pop_up.body.original_widget = widget
-        self.pop_up.header = header
-        self.pop_up.footer = footer
-        self.urwid_loop.widget = self.pop_up_overlay
-
-    def close_pop_up(self):
-        self.pop_up.body.original_widget = None
-        self.pop_up.header = None
-        self.pop_up.footer = None
-        self.urwid_loop.widget = self.frame
 
 ########################
 # Chat related widgets #
@@ -140,20 +137,33 @@ class ChatWidget(urwid.WidgetWrap):
         self.frame = urwid.Pile([('weight', 1, self.message_list),
                                  ('pack', self.edit_message),
                                  ('pack', self.w_channel_cols)], 1)
-        self.__super.__init__(self.frame)
+        self.pop_up = urwid.Frame(urwid.WidgetPlaceholder(None))
+        self.pop_up_overlay = urwid.Overlay(
+            urwid.LineBox(self.pop_up), self.frame, 'center', ('relative', 60),
+            'middle', ('relative', 60))
+        self.w_placeholder = urwid.WidgetPlaceholder(self.frame)
+        self.__super.__init__(self.w_placeholder)
         if len(channels) == 0:
-            self.ui.open_pop_up(ServerTree(self))
+            self.open_pop_up(ServerTree(self))
 
     def keypress(self, size, key):
         key = self._w.keypress(size, key)
+        if key == None:
+            return
         if key in ("s", "ctrl s"):
-            self.ui.open_pop_up(ServerTree(self))
+            self.open_pop_up(ServerTree(self))
+            return
         if key == "up":
             if self.frame.focus_position > 0:
                 self.frame.focus_position -= 1
+                return
         if key == "down":
             if self.frame.focus_position < len(self.frame.widget_list) - 1:
                 self.frame.focus_position += 1
+                return
+        if re.match("meta [0-9]", key):
+            return self.ui._keypress(key)
+        return key
 
     def channel_list_updated(self):
         self.channel_names = processing.shorten_channel_names(self.channels,
@@ -161,6 +171,18 @@ class ChatWidget(urwid.WidgetWrap):
         self.message_list.list_walker.invalidate()
         self.message_list.w_sidebar.update_list()
         self.w_channel_cols.update_columns()
+
+    def open_pop_up(self, widget, header=None, footer=None):
+        self.pop_up.body.original_widget = widget
+        self.pop_up.header = header
+        self.pop_up.footer = footer
+        self.w_placeholder.original_widget = self.pop_up_overlay
+
+    def close_pop_up(self):
+        self.pop_up.body.original_widget = None
+        self.pop_up.header = None
+        self.pop_up.footer = None
+        self.w_placeholder.original_widget = self.frame
 
 
 class ServerTree(urwid.WidgetWrap):
@@ -202,14 +224,14 @@ class ServerTree(urwid.WidgetWrap):
             if key == "enter":
                 server_tree.chat_widget.channels.append(channel)
                 server_tree.chat_widget.channel_list_updated()
-                server_tree.chat_widget.ui.close_pop_up()
+                server_tree.chat_widget.close_pop_up()
                 return
             if key in (" ", "s"):
                 server_tree.chat_widget.channels.append(channel)
                 server_tree.chat_widget.channel_list_updated()
                 return
             if key in ("esc", "q"):
-                server_tree.chat_widget.ui.close_pop_up()
+                server_tree.chat_widget.close_pop_up()
                 return
             return key
 
@@ -755,6 +777,8 @@ class MessageEditWidget(urwid.WidgetWrap):
         else:
             key = self.edit.keypress(size, key)
             if key is None:
+                if self.editing is None:
+                    self.discord.async(self.discord.send_typing(self.chat_widget.send_channel))
                 return
             if key == "up":
                 self.chat_widget.message_list.scroll_to_bottom()
