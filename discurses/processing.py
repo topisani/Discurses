@@ -8,6 +8,10 @@ def format_incomming(text: str) -> str:
     return text
 
 
+def format_outgoing(text: str) -> str:
+    return text
+
+
 def shorten_channel_names(channels: List[discord.Channel], length) -> Dict[discord.Channel, str]:
     if len(channels) == 0:
         return {}

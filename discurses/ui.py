@@ -81,7 +81,7 @@ class MainUI:
         self.urwid_loop.start()
 
     def _keypress(self, input):
-        if input is None:
+        if input is None or type(input) != str:
             return
         if input in ("Q"):
             self.urwid_loop.stop()
@@ -135,8 +135,7 @@ class ChatWidget(urwid.WidgetWrap):
         self.message_list = MessageListWidget(self.discord, self)
         self.edit_message = MessageEditWidget(self.discord, self)
         self.frame = urwid.Pile([('weight', 1, self.message_list),
-                                 ('pack', self.edit_message),
-                                 ('pack', self.w_channel_cols)], 1)
+                                 ('pack', self.edit_message)], 1)
         self.pop_up = urwid.Frame(urwid.WidgetPlaceholder(None))
         self.pop_up_overlay = urwid.Overlay(
             urwid.LineBox(self.pop_up), self.frame, 'center', ('relative', 60),
@@ -192,11 +191,12 @@ class ServerTree(urwid.WidgetWrap):
         for server in chat_widget.discord.servers:
             node = {"name": server.name, "children": []}
             for ch in server.channels:
-                node['children'].append({
-                    'name': ch.name,
-                    'server_tree': self,
-                    'channel': ch
-                })
+                if ch.type == discord.ChannelType.text:
+                    node['children'].append({
+                        'name': ch.name,
+                        'server_tree': self,
+                        'channel': ch
+                    })
 
             nodeobj = ServerTree.TreeNodeServer(node)
             nodeobj.expanded = False
@@ -223,11 +223,13 @@ class ServerTree(urwid.WidgetWrap):
             channel = self.get_node().get_value()['channel']
             if key == "enter":
                 server_tree.chat_widget.channels.append(channel)
+                server_tree.chat_widget.send_channel = channel
                 server_tree.chat_widget.channel_list_updated()
                 server_tree.chat_widget.close_pop_up()
                 return
             if key in (" ", "s"):
                 server_tree.chat_widget.channels.append(channel)
+                server_tree.chat_widget.send_channel = channel
                 server_tree.chat_widget.channel_list_updated()
                 return
             if key in ("esc", "q"):
@@ -385,62 +387,6 @@ class Sidebar(urwid.WidgetWrap):
         self.chat_widget.discord.loop.create_task(callback())
 
 
-class SendChannelSelector(urwid.WidgetWrap):
-    def __init__(self, chat_widget: ChatWidget):
-        self.chat_widget = chat_widget
-        self.w_cols = urwid.Columns([])
-        self._selectable = True
-        self.update_columns()
-        self.__super.__init__(self.w_cols)
-
-    def selectable(self):
-        return True
-
-    def keypress(self, size, key):
-        if key == "left":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
-            return
-        if key == "right":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
-            return
-        if key == "enter":
-            self.select_channel(self.w_cols.focus_position)
-            self.chat_widget.message_list.update_columns()
-            return "up"
-        if key in ("delete", "d"):
-            del self.chat_widget.channels[self.w_cols.focus_position]
-            self.chat_widget.channel_list_updated()
-            return
-        return key
-
-    def select_channel(self, index):
-        self.chat_widget.send_channel = self.chat_widget.channels[index]
-        self.update_columns()
-
-    def update_columns(self):
-        cols = []
-        names = processing.shorten_channel_names(self.chat_widget.channels,
-                                                 100)
-        for ch in self.chat_widget.channels:
-            if ch == self.chat_widget.send_channel:
-                cols.append((urwid.AttrMap(
-                    urwid.Text(
-                        names[ch], align="center"),
-                    "send_channel_selector_sel",
-                    "send_channel_selector_sel_f"),
-                             self.w_cols.options('weight', 1)))
-            else:
-                cols.append((urwid.AttrMap(
-                    urwid.Text(
-                        names[ch], align="center"),
-                    "send_channel_selector",
-                    "send_channel_selector_f"),
-                             self.w_cols.options('weight', 1)))
-        self.w_cols.contents = cols
-
-
 class MessageListWidget(urwid.WidgetWrap):
     """The Listbox of MessageWidgets"""
 
@@ -537,7 +483,6 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
         if before == None and len(self) > 0:
             before = self[0].message.timestamp
         if self.is_polling or self.top_reached:
-            self.list_widget.ui.notify("testytest")
             return
         self.is_polling = True
 
@@ -638,7 +583,7 @@ class MessageWidget(urwid.WidgetWrap):
         self.ui = self.discord.ui
         self.chat_widget = chat_widget
         self.message = m
-        self.processed = processing.format_incomming(m.content)
+        self.processed = processing.format_incomming(m.clean_content)
         self.columns_w = urwid.Columns([])
         w = urwid.AttrMap(self.columns_w, None, {
             "message_timestamp": "message_timestamp_f",
@@ -707,6 +652,9 @@ class MessageWidget(urwid.WidgetWrap):
             self.chat_widget.edit_message.reply_to(self.message)
             self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
             return
+        if key == "m":
+            self.chat_widget.edit_message.edit.insert_text("<@!{0}>".format(self.message.author.id))
+            self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
         return key
 
     class Column:
@@ -745,8 +693,9 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.caption = urwid.Text("\n Send ")
         self.edit = urwid.Edit(multiline=True)
         lb = urwid.LineBox(urwid.Padding(self.edit, left=1, right=1))
-        w = urwid.Columns([('pack', self.caption), ('weight', 1, lb)])
-        self.__super.__init__(w)
+        self.w_cols = urwid.Columns([('pack', self.caption), ('weight', 1, lb)])
+        self.pile = urwid.Pile([self.w_cols])
+        self.__super.__init__(self.pile)
 
     def selectable(self) -> bool:
         # This is where we can disable the edit widget
@@ -767,30 +716,33 @@ class MessageEditWidget(urwid.WidgetWrap):
                                           self.edit.edit_text))
 
     def keypress(self, size, key):
-        if key == "enter":
-            self._send_message()
-            self.edit.set_edit_text("")
-            return
-        elif key == "meta enter":
-            self.edit.keypress(size, "enter")
-            return
-        else:
-            key = self.edit.keypress(size, key)
-            if key is None:
-                if self.editing is None:
-                    self.discord.async(self.discord.send_typing(self.chat_widget.send_channel))
+        if self.pile.focus_item == self.w_cols:
+            if key == "enter":
+                self._send_message()
+                self.edit.set_edit_text("")
                 return
-            if key == "up":
-                self.chat_widget.message_list.scroll_to_bottom()
-            if key == "esc":
-                if self.editing is not None:
-                    self.stop_edit()
-                    return
-                else:
-                    self.chat_widget.frame.edit_message.set_focus(
-                        self.chat_widget.message_list)
-                    return
-            return key
+            elif key == "meta enter":
+                self.edit.keypress(size, "enter")
+                return
+        key = self.pile.focus_item.keypress(size, key)
+        if key is None:
+            if self.editing is None:
+                self.discord.async(self.discord.send_typing(self.chat_widget.send_channel))
+            return
+        if key == "up":
+            self.chat_widget.message_list.scroll_to_bottom()
+        if key == "down":
+            self.show_channel_selector()
+            return
+        if key == "esc":
+            if self.editing is not None:
+                self.stop_edit()
+                return
+            else:
+                self.chat_widget.edit_message.set_focus(
+                    self.chat_widget.message_list)
+                return
+        return key
 
     def edit_message(self, message: Message):
         self.caption.set_text("\n Edit ")
@@ -806,6 +758,77 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.caption.set_text("\n Send ")
         self.editing = None
         self.edit.set_edit_text("")
+
+    def show_channel_selector(self):
+        self.pile.contents = [
+            (self.w_cols, self.pile.options()),
+            (self.chat_widget.w_channel_cols, self.pile.options())
+        ]
+        self.pile.focus_position = 1
+    def hide_channel_selector(self):
+        self.pile.contents = [
+            (self.w_cols, self.pile.options())
+        ]
+        self.pile.focus_position = 0
+
+class SendChannelSelector(urwid.WidgetWrap):
+    def __init__(self, chat_widget: ChatWidget):
+        self.chat_widget = chat_widget
+        self.w_cols = urwid.Columns([])
+        self._selectable = True
+        self.update_columns()
+        self.__super.__init__(self.w_cols)
+
+    def selectable(self):
+        return True
+
+    def keypress(self, size, key):
+        if key == "left":
+            self.w_cols.focus_position = (
+                self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
+            return
+        if key == "right":
+            self.w_cols.focus_position = (
+                self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
+            return
+        if key == "enter":
+            self.select_channel(self.w_cols.focus_position)
+            self.chat_widget.message_list.update_columns()
+            self.chat_widget.edit_message.hide_channel_selector()
+            return
+        if key == "up":
+            self.chat_widget.edit_message.hide_channel_selector()
+            return
+        if key in ("delete", "d"):
+            del self.chat_widget.channels[self.w_cols.focus_position]
+            self.chat_widget.channel_list_updated()
+            return
+        return key
+
+    def select_channel(self, index):
+        self.chat_widget.send_channel = self.chat_widget.channels[index]
+        self.update_columns()
+
+    def update_columns(self):
+        cols = []
+        names = processing.shorten_channel_names(self.chat_widget.channels,
+                                                 100)
+        for ch in self.chat_widget.channels:
+            if ch == self.chat_widget.send_channel:
+                cols.append((urwid.AttrMap(
+                    urwid.Text(
+                        names[ch], align="center"),
+                    "send_channel_selector_sel",
+                    "send_channel_selector_sel_f"),
+                             self.w_cols.options('weight', 1)))
+            else:
+                cols.append((urwid.AttrMap(
+                    urwid.Text(
+                        names[ch], align="center"),
+                    "send_channel_selector",
+                    "send_channel_selector_f"),
+                             self.w_cols.options('weight', 1)))
+        self.w_cols.contents = cols
 
 
 class TopReachedWidget(urwid.WidgetWrap):
