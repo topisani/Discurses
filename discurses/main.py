@@ -17,7 +17,8 @@ class DiscordClient(discord.Client):
         self.event_handlers = {
             "on_message": [],
             "on_message_edit": [],
-            "on_message_delete": []
+            "on_message_delete": [],
+            "on_typing": [],
         }
 
     def add_event_handler(self, event: str, f):
@@ -41,6 +42,10 @@ class DiscordClient(discord.Client):
     async def on_message_delete(self, m: Message):
         for f in self.event_handlers['on_message_delete']:
             f(m)
+
+    async def on_typing(self, channel, user, when):
+        for f in self.event_handlers['on_typing']:
+            f(channel, user, when)
 
     async def login(self):
         await super().login(config.table['token'], bot=False)

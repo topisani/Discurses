@@ -1,5 +1,6 @@
 import yaml
 import os
+import shlex
 
 CONFIG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".config", "discurses.yaml")
@@ -18,8 +19,8 @@ async def send_notification(discord, message):
     avatar = await discord.get_avatar(message.author)
     os.system(
         "notify-send -i {avatar} \"{author} in {server}#{channel}: {content}\"".format(
-            avatar=avatar,
-            author=message.author,
-            server=message.server,
-            channel=message.channel,
-            content=message.content))
+            avatar=shlex.quote(avatar),
+            author=shlex.quote(message.author),
+            server=shlex.quote(message.server),
+            channel=shlex.quote(message.channel),
+            content=shlex.quote(message.content)))
