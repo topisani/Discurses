@@ -73,7 +73,6 @@ class DiscordClient(discord.Client):
                 d['server'] = self.get_server(d.get('guild_id'))
                 self._server_settings[d.get('guild_id')] = ServerSettings(self, d)
             
-
     async def get_server_settings(self, server):
         if server.id not in self._server_settings:
             self._server_settings[server.id] = ServerSettings(

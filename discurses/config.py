@@ -18,12 +18,12 @@ async def send_notification(discord, message):
     """
     avatar = await discord.get_avatar(message.author)
     os.system(
-        "notify-send -i {avatar} \"{author} in {server}#{channel}: {content}\"".format(
+        "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}".format(
             avatar=shlex.quote(avatar),
-            author=shlex.quote(message.author),
-            server=shlex.quote(message.server),
-            channel=shlex.quote(message.channel),
-            content=shlex.quote(message.content)))
+            author=shlex.quote(message.author.name),
+            server=shlex.quote(message.server.name),
+            channel=shlex.quote(message.channel.name),
+            content=shlex.quote(message.clean_content)))
 
 
 def file_picker(callback, chat_widget):
@@ -46,3 +46,6 @@ def file_picker(callback, chat_widget):
             chat_widget.close_pop_up()
     chat_widget.open_text_prompt(_callback2, "Send File")
             
+
+def to_clipboard(text):
+    os.system("echo {} | xclip -selection c".format(shlex.quote(text)))

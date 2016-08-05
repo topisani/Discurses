@@ -814,6 +814,10 @@ class MessageWidget(urwid.WidgetWrap):
         if key == "m":
             self.chat_widget.edit_message.edit.insert_text("<@!{0}>".format(self.message.author.id))
             self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+            return
+        if key == "y":
+            config.to_clipboard(self.message.clean_content)
+            return
         return key
 
     class Column:
