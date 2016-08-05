@@ -24,3 +24,25 @@ async def send_notification(discord, message):
             server=shlex.quote(message.server),
             channel=shlex.quote(message.channel),
             content=shlex.quote(message.content)))
+
+
+def file_picker(callback, chat_widget):
+    """
+    Open some sort of file picker
+    This default implementation opens a text prompt
+
+    The callback takes one argument, the file path
+
+    chat_widget is the instance of ChatWidget.
+    """
+    def _callback2(txt):
+        if txt is not None:
+            path = os.path.expanduser(txt)
+            if os.path.isfile(path):
+                callback(path)
+            else:
+                chat_widget.open_text_prompt(_callback2, "File not found", path)
+        else:
+            chat_widget.close_pop_up()
+    chat_widget.open_text_prompt(_callback2, "Send File")
+            

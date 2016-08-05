@@ -14,6 +14,7 @@ import urwid
 from discord import Channel, Message
 
 import processing
+import config
 from main import DiscordClient
 
 
@@ -252,8 +253,15 @@ class ChatWidget(urwid.WidgetWrap):
                     self.edit_message.edit.insert_text("```\n" + os.popen(txt).read() + "\n```")
                 self.close_pop_up()
             self.open_text_prompt(_callback, "Send results of command")
+        if key in ("meta f",):
+            def _callback(path):
+                def _callback2(txt):
+                    self.close_pop_up()
+                    self.discord.async(self.discord.send_file(destination=self.send_channel, fp=path, content=txt))
+                self.open_text_prompt(_callback2, "Message contents", self.edit_message.edit.edit_text)
+            config.file_picker(_callback, self)
+                    
         return key
-
     def set_name(self, string):
         self.name = string
         self.ui.w_tabs.update_columns()
@@ -275,8 +283,8 @@ class ChatWidget(urwid.WidgetWrap):
             'middle', height)
         self.w_placeholder.original_widget = self.pop_up_overlay
 
-    def open_text_prompt(self, callback, title=""):
-        self.open_pop_up(urwid.Filler(TextEditWidget(callback)),
+    def open_text_prompt(self, callback, title="", content=""):
+        self.open_pop_up(urwid.Filler(TextEditWidget(callback, content=content)),
             header=urwid.Text(title, align='center'),
             height=6,
             width=50)
@@ -291,9 +299,9 @@ class ChatWidget(urwid.WidgetWrap):
 
 class TextEditWidget(urwid.WidgetWrap):
 
-    def __init__(self, callback):
+    def __init__(self, callback, content=""):
         self.callback = callback
-        self.w_edit = urwid.Edit()
+        self.w_edit = urwid.Edit(edit_text=content)
         self.w_lb = urwid.LineBox(self.w_edit)
         self.__super.__init__(self.w_lb)
 
@@ -496,7 +504,7 @@ class Sidebar(urwid.WidgetWrap):
         return self.w_listbox.mouse_event(size, event, button, col, row, focus)
 
     def keypress(self, size, key):
-        if key == "esc":
+        if key in ("esc", "b"):
             self.chat_widget.message_list.toggle_sidebar(False)
         return self.w_listbox.keypress(size, key)
 
@@ -531,7 +539,7 @@ class Sidebar(urwid.WidgetWrap):
                         self._get_user_attr(member)))
             self.list_walker[:] = items
 
-        self.chat_widget.discord.loop.create_task(callback())
+        self.chat_widget.discord.async(callback())
 
 
 class MessageListWidget(urwid.WidgetWrap):
@@ -731,6 +739,8 @@ class MessageWidget(urwid.WidgetWrap):
         self.chat_widget = chat_widget
         self.message = m
         self.processed = processing.format_incomming(m.clean_content)
+        for at in m.attachments:
+            self.processed += "\n" + at.get('url')
         self.columns_w = urwid.Columns([])
         w = urwid.AttrMap(self.columns_w, None, {
             "message_timestamp": "message_timestamp_f",
