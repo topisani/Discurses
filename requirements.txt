@@ -1,4 +1,0 @@
-discord.py
-urwid
-pytest
-pyyaml
