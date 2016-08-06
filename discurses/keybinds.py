@@ -17,10 +17,13 @@ def parameterized(dec):
     >>> add(3, 2)
     25
     """
+
     def layer(*args, **kwargs):
         def repl(f):
             return dec(f, *args, **kwargs)
+
         return repl
+
     return layer
 
 
@@ -30,9 +33,12 @@ class KeyMap:
     A list of commands, defined using the `@keybind` decorator,
     and a list of key to command mappings.
     """
+
     def __init__(self, keys={}):
         self.commands = {}
-        self.keys = keys
+        self.keys = {}
+        for key, commands in keys.items():
+            self.add_key(key, commands)
 
     def add_command(self, name, func):
         """
@@ -47,12 +53,24 @@ class KeyMap:
     def add_key(self, key, command):
         """
         Map `key` to `command`
+        command can be one of the following:
+
+          * A string, the name of the command
+          * A tuple `(command, args...)`. `args` will be passed to the
+            functions
+          * A list of any of the two above, can be mixed
+
         If the key is already mapped, the command will be added to its list
         """
-        if key in self.keys.keys():
-            self.keys[key].append(command)
-        else:
-            self.keys[key] = [command]
+        if not isinstance(command, list) and not isinstance(command, set):
+            command = {command}
+        for c in command:
+            if not isinstance(c, tuple):
+                c = (c,)
+            if key in self.keys.keys():
+                self.keys[key].append(c)
+            else:
+                self.keys[key] = [c]
 
     def command(self, func):
         """
@@ -60,33 +78,47 @@ class KeyMap:
         """
         self.add_command(func.__name__, func)
         return func
- 
+
     def keypress(self, func):
         """
         Decorator
-        Calls the apropriate commands for the keypress,
-        and then calls the decorated function
+        Calls the decorated function before calling the apropriate commands
+        for the keypress. The value returned by `func` will be sent to the
+        commands as the new `key`
         """
+
         def dec(widget, size, key):
-            k = None
-            if key in self.keys.keys():
-                for command in self.keys[key]:
-                    assert command in self.commands
-                    for fn in self.commands[command]:
-                        nk = fn(widget, size, key)
-                        k = nk if nk is not None else k
-            func(widget, size, k)
+            key = func(widget, size, key)
+            return self.press_key(key, widget)
+
         return dec
 
-    def owner(self, clazz):
+    def press_key(self, key, widget):
         """
-        Class Decorator.
-        Adds a `keypress` method to the class.
-        Do not use, this if the class needs to implement its own `keypress` method.
-        Instead, decorate the keypress with `keypress`
+        Calls the commands associated with `key`
+        Will return `None` or the result of the last command that wasnt `None`
         """
-        @self.keypress
-        def _keypress(w, size, key):
-            return key
-        clazz.keypress = _keypress
-        return clazz
+        k = key
+        if key in self.keys.keys():
+            k = None
+            for command in self.keys[key]:
+                assert command[0] in self.commands
+                if len(command) > 1:
+                    nk = self.call_command(command[0], widget, *command[1:])
+                else:
+                    nk = self.call_command(command[0], widget)
+                if nk is not None:
+                    k = nk
+        return k
+
+    def call_command(self, command, *args, **kwargs):
+        """
+        Call command by name and pass it `*args` and `**kwargs`
+        Will return `None` or the result of the last function that wasnt `None`
+        """
+        key = None
+        for fn in self.commands[command]:
+            k = fn(*args, **kwargs)
+            if k is not None:
+                key = k
+        return key

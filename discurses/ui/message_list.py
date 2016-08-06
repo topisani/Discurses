@@ -4,6 +4,7 @@ import discord
 import urwid
 
 import discurses.processing
+import discurses.keymaps as keymaps
 
 
 class MessageListWidget(urwid.WidgetWrap):
@@ -23,6 +24,7 @@ class MessageListWidget(urwid.WidgetWrap):
         self.scroll_to_bottom()
         self.w_sidebar = Sidebar(chat_widget)
         self.w_columns = urwid.Columns([('weight', 1, self.listbox)])
+        self.sidebar_visible = False
         self.__super.__init__(self.w_columns)
 
     def add_message(self, message):
@@ -57,12 +59,9 @@ class MessageListWidget(urwid.WidgetWrap):
         if len(self.list_walker) > 0:
             self.listbox.set_focus(len(self.list_walker) - 1)
 
+    @keymaps.MESSAGE_LIST.keypress
     def keypress(self, size, key):
-        key = self._w.keypress(size, key)
-        if key == "b":
-            self.toggle_sidebar(True)
-            return
-        return key
+        return self._w.keypress(size, key)
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == 'mouse press':
@@ -72,12 +71,16 @@ class MessageListWidget(urwid.WidgetWrap):
                 return self.listbox.keypress(size, "down") is not None
         return self.listbox.mouse_event(size, event, button, col, row, focus)
 
-    def update_columns(self):
+    @keymaps.MESSAGE_LIST.command
+    def update_all_columns(self):
         for mw in self.list_walker:
             mw.update_columns()
 
-    def toggle_sidebar(self, vis):
-        if vis:
+    @keymaps.MESSAGE_LIST.command
+    def toggle_sidebar(self, flag=None):
+        if flag is None:
+            flag = not self.sidebar_visible
+        if flag:
             self.w_columns.contents = [
                 (self.listbox, self.w_columns.options('weight', 1)),
                 (self.w_sidebar, self.w_columns.options('weight', .25)),
@@ -88,6 +91,7 @@ class MessageListWidget(urwid.WidgetWrap):
                 (self.listbox, self.w_columns.options('weight', 1)),
             ]
             self.w_columns.focus_position = 0
+        self.sidebar_visible = flag
 
 
 class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
@@ -215,6 +219,11 @@ class MessageWidget(urwid.WidgetWrap):
         self.update_columns()
         self.__super.__init__(w)
 
+    @keymaps.MESSAGE_LIST_ITEM.keypress
+    def keypress(self, size, key):
+        return key
+
+    @keymaps.MESSAGE_LIST_ITEM.command
     def update_columns(self, author_width=13):
         author_width = author_width + 3
         channel_visible = len(self.chat_widget.channels) > 1
@@ -260,29 +269,32 @@ class MessageWidget(urwid.WidgetWrap):
     def selectable(self) -> bool:
         return True
 
-    def keypress(self, size, key: str):
-        if key == "enter" and self.message.author == self.discord.user:
-            self.chat_widget.edit_message.edit_message(self.message)
-            self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
-            return
-        if key == "delete" and (self.message.author == self.discord.user or
-                                self.message.channel.permissions_for(
-                                    self.discord.user).manage_messages):
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def edit_message(self):
+        self.chat_widget.edit_message.edit_message(self.message)
+        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def delete_message(self):
+        if self.message.author == self.discord.user or self.message.channel.permissions_for(
+                self.discord.user).manage_messages:
             self.discord.async(self.discord.delete_message(self.message))
-            return
-        if key == "r":
-            self.chat_widget.edit_message.reply_to(self.message)
-            self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
-            return
-        if key == "m":
-            self.chat_widget.edit_message.edit.insert_text("<@!{0}>".format(
-                self.message.author.id))
-            self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
-            return
-        if key == "y":
-            discurses.config.to_clipboard(self.message.clean_content)
-            return
-        return key
+
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def quote_message(self):
+        self.chat_widget.edit_message.reply_to(self.message)
+        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def mention_author(self):
+        self.chat_widget.edit_message.edit.insert_text("<@!{0}>".format(
+            self.message.author.id))
+        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def yank_message(self):
+        discurses.config.to_clipboard(self.message.clean_content)
+        return
 
     class Column:
         def __init__(self,
@@ -351,6 +363,7 @@ class Sidebar(urwid.WidgetWrap):
         self.w_listbox = urwid.ListBox(self.list_walker)
         self.update_list()
         self.__super.__init__(urwid.Padding(self.w_listbox, left=2))
+        keymaps.GLOBAL.add_command("redraw", self.update_list)
 
     def _get_user_attr(self, member):
         if member.status == discord.Status.online:
@@ -368,13 +381,7 @@ class Sidebar(urwid.WidgetWrap):
                 return self.w_listbox.keypress(size, "down") is not None
         return self.w_listbox.mouse_event(size, event, button, col, row, focus)
 
-    def keypress(self, size, key):
-        if key in ("esc", "b"):
-                    self.chat_widget.message_list.toggle_sidebar(False)
-        return self.w_listbox.keypress(size, key)
-
     def update_list(self):
-
         async def callback():
             servers = set()
             memberset = set()

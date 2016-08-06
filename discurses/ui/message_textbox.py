@@ -3,6 +3,7 @@ import datetime
 import urwid
 
 import discurses.processing
+import discurses.keymaps as keymaps
 
 
 class MessageEditWidget(urwid.WidgetWrap):
@@ -13,7 +14,8 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.ui = self.discord.ui
         self.chat_widget = chat_widget
         self.editing = None
-        self.edit = urwid.Edit(multiline=True)
+        self.edit = urwid.Edit(multiline=True, allow_tab=True)
+        self.edit.keypress = self._edit_keypress
         self.w_lb = urwid.LineBox(urwid.Padding(self.edit, left=1, right=1))
         self.w_text = urwid.Text("")
         self.w_typing = TypingList(self)
@@ -21,12 +23,13 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.hide_channel_selector()
         self.__super.__init__(self.pile)
 
-    def selectable(self) -> bool:
+    def selectable(self):
         # This is where we can disable the edit widget
         # if the user is missing permissions
         return True
 
-    def _send_message(self):
+    @keymaps.MESSAGE_TEXT_BOX.command
+    def send_message(self):
         if self.edit.edit_text == "":
             self.stop_edit()
             return
@@ -38,31 +41,30 @@ class MessageEditWidget(urwid.WidgetWrap):
             self.discord.async(
                 self.discord.send_message(self.chat_widget.send_channel,
                                           self.edit.edit_text))
+        self.edit.set_edit_text("")
 
+
+    @keymaps.MESSAGE_TEXT_BOX.keypress
     def keypress(self, size, key):
-        if self.pile.focus_item == self.w_lb:
-            if key == "enter":
-                self._send_message()
-                self.edit.set_edit_text("")
-                return
-            elif key == "meta enter":
-                self.edit.keypress(size, "enter")
-                return
-        key = self.pile.focus_item.keypress(size, key)
-        if key is None:
-            if self.editing is None and self.pile.focus_item == self.w_lb:
+        return self.pile.focus_item.keypress(size, key)
+
+    @keymaps.MESSAGE_TEXT_BOX.command
+    def focus_message_list(self):
+        self.chat_widget.message_list.scroll_to_bottom()
+        self.chat_widget.frame.set_focus(self.chat_widget.message_list)
+
+    @keymaps.MESSAGE_TEXT_BOX.command
+    def insert(self, text):
+        self.edit.insert_text(text)
+
+    def _edit_keypress(self, size, key):
+        if key == "enter":
+            return key
+        key = urwid.Edit.keypress(self.edit, size, key)
+        if key == None:
+            if self.editing is None:
                 self.discord.async(
                     self.discord.send_typing(self.chat_widget.send_channel))
-            return
-        if key == "up":
-            self.chat_widget.message_list.scroll_to_bottom()
-        if key == "down":
-            self.show_channel_selector()
-            return
-        if key == "esc":
-            self.stop_edit()
-            self.chat_widget.frame.set_focus(self.chat_widget.message_list)
-            return
         return key
 
     def edit_message(self, message):
@@ -75,13 +77,15 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.edit.set_edit_text("> _{0}_\n".format(message.content))
         self.edit.set_edit_pos(len(self.edit.edit_text))
 
-    def stop_edit(self):
+    @keymaps.MESSAGE_TEXT_BOX.command
+    def cancel_edit(self):
         self.w_text.set_text(
             " {}#{}".format(self.chat_widget.send_channel.server,
                             self.chat_widget.send_channel.name))
         self.editing = None
         self.edit.set_edit_text("")
 
+    @keymaps.MESSAGE_TEXT_BOX.command
     def show_channel_selector(self):
         self.pile.contents = [
             (self.w_lb, self.pile.options()), (urwid.Columns(
@@ -91,6 +95,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         ]
         self.pile.focus_position = 2
 
+    @keymaps.MESSAGE_TEXT_BOX.command
     def hide_channel_selector(self):
         self.pile.contents = [
             (self.w_lb, self.pile.options()),
@@ -100,6 +105,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         ]
         self.pile.focus_position = 0
 
+    @keymaps.MESSAGE_TEXT_BOX.command
     def update_text(self):
         if self.editing is None and self.chat_widget.send_channel is not None:
             self.w_text.set_text(
@@ -159,33 +165,40 @@ class SendChannelSelector(urwid.WidgetWrap):
     def selectable(self):
         return True
 
+    @keymaps.SEND_CHANNEL_SELECTOR.keypress
     def keypress(self, size, key):
-        if key == "left":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
-            return
-        if key == "right":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
-            return
-        if key == "enter":
-            self.select_channel(self.w_cols.focus_position)
-            self.chat_widget.channel_list_updated(get_logs=False)
-            self.chat_widget.edit_message.hide_channel_selector()
-            return
-        if key == "up":
-            self.chat_widget.edit_message.hide_channel_selector()
-            return
-        if key in ("delete", "d"):
-            del self.chat_widget.channels[self.w_cols.focus_position]
-            self.chat_widget.channel_list_updated()
-            return
         return key
 
+    @keymaps.SEND_CHANNEL_SELECTOR.command
+    def focus_left(self):
+        self.w_cols.focus_position = (
+            self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
+
+    @keymaps.SEND_CHANNEL_SELECTOR.command
+    def focus_right(self):
+        self.w_cols.focus_position = (
+            self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
+
+    @keymaps.SEND_CHANNEL_SELECTOR.command
+    def select_focused(self):
+        self.select_channel(self.w_cols.focus_position)
+        self.chat_widget.channel_list_updated(get_logs=False)
+
+    @keymaps.SEND_CHANNEL_SELECTOR.command
+    def exit(self):
+        self.chat_widget.edit_message.hide_channel_selector()
+
+    @keymaps.SEND_CHANNEL_SELECTOR.command
+    def delete_focused(self):
+        del self.chat_widget.channels[self.w_cols.focus_position]
+        self.chat_widget.channel_list_updated()
+
+    @keymaps.SEND_CHANNEL_SELECTOR.command
     def select_channel(self, index):
         self.chat_widget.send_channel = self.chat_widget.channels[index]
         self.update_columns()
 
+    @keymaps.SEND_CHANNEL_SELECTOR.command
     def update_columns(self):
         cols = []
         names = discurses.processing.shorten_channel_names(

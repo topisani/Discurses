@@ -1,8 +1,10 @@
 import os
 import re
+
 import urwid
 
 import discurses.config
+import discurses.keymaps as keymaps
 import discurses.processing
 from discurses.ui import (MessageEditWidget, MessageListWidget,
                           SendChannelSelector, ServerTree)
@@ -38,59 +40,61 @@ class ChatWidget(urwid.WidgetWrap):
         if len(channels) == 0:
             self.open_pop_up(ServerTree(self))
 
+    @keymaps.CHAT.keypress
     def keypress(self, size, key):
-        key = self._w.keypress(size, key)
-        if key == None:
+        return self._w.keypress(size, key)
+
+    @keymaps.CHAT.command
+    def popup_server_tree(self):
+        self.open_pop_up(ServerTree(self))
+
+    @keymaps.GLOBAL.command
+    def redraw(self):
+        self.channel_list_updated()
+
+    @keymaps.CHAT.command
+    def focus_up(self):
+        if self.frame.focus_position > 0:
+            self.frame.focus_position -= 1
+
+    @keymaps.CHAT.command
+    def focus_down(self):
+        if self.frame.focus_position < len(self.frame.widget_list) - 1:
+            self.frame.focus_position += 1
             return
-        if key in ("s", "meta s"):
-            self.open_pop_up(ServerTree(self))
-            return
-        if key in ("ctrl l", ):
-            self.channel_list_updated()
-        if key == "up":
-            if self.frame.focus_position > 0:
-                self.frame.focus_position -= 1
-                return
-        if key == "down":
-            if self.frame.focus_position < len(self.frame.widget_list) - 1:
-                self.frame.focus_position += 1
-                return
-        if re.match("meta [0-9]", key):
-            return self.ui._keypress(key)
-        if key in ("n", "ctrl n", "meta n"):
 
-            def _callback(txt):
-                if txt is not None:
-                    self.set_name(txt)
+    @keymaps.CHAT.command
+    def popup_rename_tab(self):
+        def _callback(txt):
+            if txt is not None:
+                self.set_name(txt)
+            self.close_pop_up()
+
+        self.open_text_prompt(_callback, "Change tab name", self.name)
+
+    @keymaps.CHAT.command
+    def popup_shell_command(self):
+        def _callback(txt):
+            if txt is not None:
+                self.edit_message.edit.insert_text("```\n" + os.popen(
+                    txt).read() + "\n```")
+            self.close_pop_up()
+
+        self.open_text_prompt(_callback, "Send results of command")
+
+    @keymaps.CHAT.command
+    def popup_send_file(self):
+        def _callback(path):
+            def _callback2(txt):
                 self.close_pop_up()
+                self.discord.async(
+                    self.discord.send_file(
+                        destination=self.send_channel, fp=path, content=txt))
 
-            self.open_text_prompt(_callback, "Change tab name", self.name)
-        if key in ("meta c", ):
+            self.open_text_prompt(_callback2, "Message contents",
+                                  self.edit_message.edit.edit_text)
 
-            def _callback(txt):
-                if txt is not None:
-                    self.edit_message.edit.insert_text("```\n" + os.popen(
-                        txt).read() + "\n```")
-                self.close_pop_up()
-
-            self.open_text_prompt(_callback, "Send results of command")
-        if key in ("meta f", ):
-
-            def _callback(path):
-                def _callback2(txt):
-                    self.close_pop_up()
-                    self.discord.async(
-                        self.discord.send_file(
-                            destination=self.send_channel,
-                            fp=path,
-                            content=txt))
-
-                self.open_text_prompt(_callback2, "Message contents",
-                                      self.edit_message.edit.edit_text)
-
-            discurses.config.file_picker(_callback, self)
-
-        return key
+        discurses.config.file_picker(_callback, self)
 
     def set_name(self, string):
         self.name = string

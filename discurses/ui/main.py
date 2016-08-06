@@ -120,7 +120,6 @@ class MainUI:
         self.set_tab(0)
 
 
-@keymaps.TAB_SELECTOR.owner
 class TabSelector(urwid.WidgetWrap):
     def __init__(self, ui):
         self.ui = ui
@@ -131,6 +130,10 @@ class TabSelector(urwid.WidgetWrap):
 
     def selectable(self):
         return True
+
+    @keymaps.TAB_SELECTOR.keypress
+    def keypress(self, size, key):
+        return key
 
     @keymaps.TAB_SELECTOR.command
     def go_left(self, size, key):

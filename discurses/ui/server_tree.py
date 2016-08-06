@@ -1,6 +1,8 @@
 import discord
 import urwid
 
+import discurses.keymaps as keymaps
+
 
 class ServerTree(urwid.WidgetWrap):
     def __init__(self, chat_widget):
@@ -29,6 +31,7 @@ class ServerTree(urwid.WidgetWrap):
     def selectable(self):
         return True
 
+    @keymaps.SERVER_TREE.keypress
     def keypress(self, size, key):
         return self.w_listbox.keypress(size, key)
 
@@ -42,26 +45,33 @@ class TreeWidgetChannel(urwid.TreeWidget):
             urwid.Text(self.get_display_text()), "servtree_channel",
             "servtree_channel_f")
 
+    @keymaps.SERVER_TREE_CHANNEL.keypress
     def keypress(self, size, key):
+        return key
+
+    @keymaps.SERVER_TREE_CHANNEL.command
+    def select(self):
         server_tree = self.get_node().get_value()['server_tree']
         channel = self.get_node().get_value()['channel']
-        if key == "enter":
-            server_tree.chat_widget.channels[:] = [channel]
-            server_tree.chat_widget.send_channel = channel
-            server_tree.chat_widget.channel_list_updated()
+        server_tree.chat_widget.channels.append(channel)
+        server_tree.chat_widget.send_channel = channel
+        server_tree.chat_widget.channel_list_updated()
+
+    @keymaps.SERVER_TREE_CHANNEL.command
+    def set_only(self, set_name=True):
+        server_tree = self.get_node().get_value()['server_tree']
+        channel = self.get_node().get_value()['channel']
+        server_tree.chat_widget.channels[:] = [channel]
+        server_tree.chat_widget.send_channel = channel
+        server_tree.chat_widget.channel_list_updated()
+        if set_name:
             server_tree.chat_widget.set_name("{}#{}".format(
                 channel.server.name, channel.name))
-            server_tree.chat_widget.close_pop_up()
-            return
-        if key in (" ", "s"):
-            server_tree.chat_widget.channels.append(channel)
-            server_tree.chat_widget.send_channel = channel
-            server_tree.chat_widget.channel_list_updated()
-            return
-        if key in ("esc", "q"):
-            server_tree.chat_widget.close_pop_up()
-            return
-        return key
+
+    @keymaps.SERVER_TREE_CHANNEL.command
+    def exit(self):
+        server_tree = self.get_node().get_value()['server_tree']
+        server_tree.chat_widget.close_pop_up()
 
     def selectable(self):
         return True
@@ -85,26 +95,41 @@ class TreeWidgetServer(urwid.TreeWidget):
             urwid.Text(self.get_display_text()), "servtree_server",
             "servtree_server_f")
 
+    @keymaps.SERVER_TREE_SERVER.keypress
     def keypress(self, size, key):
+        return urwid.TreeWidget.keypress(self, size, key)
+
+    @keymaps.SERVER_TREE_SERVER.command
+    def expand(self):
+        urwid.TreeWidget.keypress(self, (0, 0), "+")
+
+    @keymaps.SERVER_TREE_SERVER.command
+    def collapse(self):
+        urwid.TreeWidget.keypress(self, (0, 0), "-")
+
+    @keymaps.SERVER_TREE_SERVER.command
+    def toggle(self):
+        if self.expanded:
+            self.collapse()
+        else:
+            self.expand()
+
+    @keymaps.SERVER_TREE_SERVER.command
+    def set_only(self, set_name=True):
         server_tree = self.get_node().get_value()['server_tree']
         children = self.get_node().get_value()['children']
-        if key == "left":
-            key = "-"
-        if key == "enter":
-            server_tree.chat_widget.channels[:] = [ch.get('channel')
-                                                   for ch in children]
-            server_tree.chat_widget.send_channel = children[0].get('channel')
-            server_tree.chat_widget.channel_list_updated()
+        server_tree.chat_widget.channels[:] = [ch.get('channel')
+                                               for ch in children]
+        server_tree.chat_widget.send_channel = children[0].get('channel')
+        server_tree.chat_widget.channel_list_updated()
+        if set_name:
             server_tree.chat_widget.set_name(self.get_node().get_value()[
                 'server'].name)
-            server_tree.chat_widget.close_pop_up()
-            return
-        if key in (" ", ):
-            key = "+"
-        if key in ("esc", "q"):
-            server_tree.chat_widget.close_pop_up()
-            return
-        return urwid.TreeWidget.keypress(self, size, key)
+
+    @keymaps.SERVER_TREE_SERVER.command
+    def exit(self):
+        server_tree = self.get_node().get_value()['server_tree']
+        server_tree.chat_widget.close_pop_up()
 
 
 class TreeNodeChannel(urwid.TreeNode):
