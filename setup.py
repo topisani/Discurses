@@ -21,7 +21,7 @@ setup(
     url='https://github.com/topisani/discurses',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
-    install_requires=['urwid', 'discord.py'],
+    install_requires=['urwid', 'discord.py', 'pyyaml'],
     entry_points={
         'console_scripts': [
             'discurses=discurses:main',
