@@ -28,6 +28,7 @@ CHAT = KeyMap({
 
 MESSAGE_LIST = KeyMap({
     "b": "toggle_sidebar",
+    "esc": "focus_message_textbox"
 })
 
 MESSAGE_LIST_ITEM = KeyMap({

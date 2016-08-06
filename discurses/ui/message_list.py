@@ -77,6 +77,10 @@ class MessageListWidget(urwid.WidgetWrap):
             mw.update_columns()
 
     @keymaps.MESSAGE_LIST.command
+    def focus_message_textbox(self):
+        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+
+    @keymaps.MESSAGE_LIST.command
     def toggle_sidebar(self, flag=None):
         if flag is None:
             flag = not self.sidebar_visible
