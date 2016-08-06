@@ -5,8 +5,8 @@ from typing import List
 import discord
 from discord import Channel, Message
 
-import config
-import ui
+import discurses.config as config
+import discurses.ui as ui
 
 
 class DiscordClient(discord.Client):
@@ -152,6 +152,3 @@ class NotificationSetting(Enum):
     undefined = 3
 
 
-if __name__ == '__main__':
-    client = DiscordClient()
-    client.run()
