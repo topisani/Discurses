@@ -1,6 +1,6 @@
-from discurses.main import DiscordClient
+import discurses
 
 
 if __name__ == '__main__':
-    client = DiscordClient()
-    client.run()
+    discurses.main()
+
