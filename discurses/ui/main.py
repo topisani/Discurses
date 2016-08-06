@@ -3,6 +3,7 @@ import re
 import urwid
 
 from discurses.ui import ChatWidget
+from discurses import keymaps
 
 
 class MainUI:
@@ -61,7 +62,7 @@ class MainUI:
         self.urwid_loop = urwid.MainLoop(
             self.frame,
             palette=MainUI.palette,
-            unhandled_input=self._keypress,
+            unhandled_input=lambda key: self._keypress(None, key),
             event_loop=urwid.AsyncioEventLoop(loop=self.discord.loop),
             pop_ups=True)
 
@@ -73,16 +74,10 @@ class MainUI:
 
         self.urwid_loop.start()
 
-    def _keypress(self, input):
+    @keymaps.GLOBAL.keypress
+    def _keypress(self, nothing, input):
         if input is None or type(input) != str:
             return
-        if input in ("Q", ):
-            self.urwid_loop.stop()
-            raise urwid.ExitMainLoop()
-        if input in ("ctrl l", ):
-            self.draw_screen()
-        if input in ("ctrl t", "meta t"):
-            self.frame.set_focus('header')
         match = re.fullmatch("meta ([0-9])", input)
         if match is not None:
             index = int(match.group(1))
@@ -91,6 +86,19 @@ class MainUI:
                 index = 10
             self.set_tab(index - 1)
 
+    @keymaps.GLOBAL.command
+    def quit(widget, size, key):
+        widget.urwid_loop.stop()
+        raise urwid.ExitMainLoop()
+
+    @keymaps.GLOBAL.command
+    def focus_tab_selector(widget, size, key):
+        widget.frame.set_focus('header')
+
+    @keymaps.GLOBAL.command
+    def redraw(widget, size, key):
+        widget.draw_screen()
+    
     def set_tab(self, tab):
         if tab not in self.tabs.keys():
             self.tabs[tab] = (ChatWidget(
@@ -112,7 +120,7 @@ class MainUI:
         self.set_tab(0)
 
 
-        
+@keymaps.TAB_SELECTOR.owner
 class TabSelector(urwid.WidgetWrap):
     def __init__(self, ui):
         self.ui = ui
@@ -124,28 +132,30 @@ class TabSelector(urwid.WidgetWrap):
     def selectable(self):
         return True
 
-    def keypress(self, size, key):
-        if key == "left":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
-            self.ui.set_tab(self.w_cols.focus.index)
-            return
-        if key == "right":
-            self.w_cols.focus_position = (
-                self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
-            self.ui.set_tab(self.w_cols.focus.index)
-            return
-        if key in ("enter", "esc"):
-            self.ui.frame.set_focus('body')
-            return
-        if key in ("d", "delete"):
-            del self.ui.tabs[self.w_cols.focus.index]
-            self.update_columns()
-            return
-        if key in ("n",):
-            self.ui.set_tab(len(self.ui.tabs))
-            return
-        return key
+    @keymaps.TAB_SELECTOR.command
+    def go_left(self, size, key):
+        self.w_cols.focus_position = (
+            self.w_cols.focus_position - 1) % len(self.w_cols.widget_list)
+        self.ui.set_tab(self.w_cols.focus.index)
+
+    @keymaps.TAB_SELECTOR.command
+    def go_right(self, size, key):
+        self.w_cols.focus_position = (
+            self.w_cols.focus_position + 1) % len(self.w_cols.widget_list)
+        self.ui.set_tab(self.w_cols.focus.index)
+
+    @keymaps.TAB_SELECTOR.command
+    def unfocus(self, size, key):
+        self.ui.frame.set_focus("body")
+
+    @keymaps.TAB_SELECTOR.command
+    def delete_tab(self, size, key):
+        del self.ui.tabs[self.w_cols.focus.index]
+        self.update_columns()
+
+    @keymaps.TAB_SELECTOR.command
+    def new_tab(self, size, key):
+        self.ui.set_tab(len(self.ui.tabs))
 
     def _set_indicator(self, position):
         for col in self.w_cols.contents:
