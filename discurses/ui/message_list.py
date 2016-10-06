@@ -228,37 +228,48 @@ class MessageWidget(urwid.WidgetWrap):
         return key
 
     @keymaps.MESSAGE_LIST_ITEM.command
-    def update_columns(self, author_width=13):
-        author_width = author_width + 3
+    def update_columns(self):
         channel_visible = len(self.chat_widget.channels) > 1
+        channel_name = self.chat_widget.channel_names[self.message.channel]
+        channel_width = min(len(channel_name) + 1, 20)
+        author_name = self.message.author.name
+        author_width_extra = 1 if len(author_name.encode("utf-8")) > len(author_name) else 0
+        author_width = 30 - channel_width + author_width_extra
         channel_attr_map = "message_channel" if len(
             self.chat_widget.
             channels) > 1 and self.message.channel == self.chat_widget.send_channel else "message_channel_cur"
         self.columns = [
             self.Column(
                 'timestamp',
-                True, ('given', 8),
+                True, ('given', 7),
                 self.message.timestamp.replace(
                     tzinfo=datetime.timezone.utc).astimezone(
                         tz=None).strftime("%H:%M"),
                 attr_map="message_timestamp",
-                padding=(1, 1)), self.Column(
-                    'channel',
-                    channel_visible, ('given', 15),
-                    self.chat_widget.channel_names[self.message.channel],
-                    attr_map=channel_attr_map,
-                    padding=(1, 1)),
+                padding=(1, 1)
+            ),
+            self.Column(
+                'channel',
+                channel_visible, ('given', channel_width),
+                channel_name[:channel_width - 1],
+                attr_map=channel_attr_map,
+                padding=(0, 1)
+            ),
             self.Column(
                 'author',
                 True, ('given', author_width),
-                "{0}:".format(self.message.author.name[:author_width - 1]),
+                "{0}:".format(author_name.encode("utf-8")[:author_width].decode("utf-8", "ignore")),
                 attr_map="message_author",
-                padding=(1, 1)), self.Column(
-                    'content',
-                    True, ('weight', 1),
-                    self.processed,
-                    attr_map="message_content",
-                    padding=(1, 1))
+                padding=(0, 1),
+                align="right"
+            ),
+            self.Column(
+                'content',
+                True, ('weight', 1),
+                self.processed,
+                attr_map="message_content",
+                padding=(0, 1)
+            )
         ]
         visible_cols = []
         for col in self.columns:
