@@ -23,3 +23,6 @@ After that, follow the instructions for linux above
 ## Authentication
 Put the file `example_discurses.yaml` in your `~/.config/` directory, replace the placeholder with your discord token and rename the file to `discurses.yaml`.
 You can get the token by visiting [https://discordapp.com/channels/@me](https://discordapp.com/channels/@me), opening the javascript console, and executing the command `localStorage.getItem("token")`.
+
+## Contributing
+First of all, please do, and if you do, feel free to ask me any questions. Also, the issue reports are up for grabs, but id be very happy to be notified before you start work, just so we dont work on the same thing.
