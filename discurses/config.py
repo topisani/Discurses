@@ -18,7 +18,8 @@ async def send_notification(discord, message):
     """
     avatar = await discord.get_avatar(message.author)
     os.system(
-        "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}".format(
+        "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
+        .format(
             avatar=shlex.quote(avatar),
             author=shlex.quote(message.author.name),
             server=shlex.quote(message.server.name),
@@ -35,17 +36,20 @@ def file_picker(callback, chat_widget):
 
     chat_widget is the instance of ChatWidget.
     """
+
     def _callback2(txt):
         if txt is not None:
             path = os.path.expanduser(txt)
             if os.path.isfile(path):
                 callback(path)
             else:
-                chat_widget.open_text_prompt(_callback2, "File not found", path)
+                chat_widget.open_text_prompt(_callback2, "File not found",
+                                             path)
         else:
             chat_widget.close_pop_up()
+
     chat_widget.open_text_prompt(_callback2, "Send File")
-            
+
 
 def to_clipboard(text):
     os.system("echo {} | xclip -selection c".format(shlex.quote(text)))

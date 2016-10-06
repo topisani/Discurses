@@ -69,11 +69,15 @@ class DiscordClient(discord.Client):
             for ss in server_settings:
                 ss['server'] = self.get_server(ss.get('guild_id'))
                 self._server_settings[ss.get('guild_id')] = ServerSettings(self, ss)
+            read_state = d.get("read_state")
+            for st in read_state:
+                rs = ReadState(self, st)
+                self.read_state[rs.channel] = rs
         if t == 'USER_GUILD_SETTINGS_UPDATE':
                 d['server'] = self.get_server(d.get('guild_id'))
                 self._server_settings[d.get('guild_id')] = ServerSettings(self, d)
             
-    async def get_server_settings(self, server):
+    async def get_server_settings(self, server): 
         if server.id not in self._server_settings:
             self._server_settings[server.id] = ServerSettings(
                 self, {'server': server})
@@ -93,6 +97,9 @@ class DiscordClient(discord.Client):
             f = open(filepath, 'wb+')
             f.write(await content.read())
         return filepath
+
+    async def send_ack(self, message):
+        self.http.post(self.http.CHANNELS + "/" + message.channel.id + "/messages/" + message.id + "/ack")
 
 
 class ServerSettings:
@@ -152,3 +159,12 @@ class NotificationSetting(Enum):
     undefined = 3
 
 
+class ReadState:
+    def __init__(self, discord_client, data):
+        self.discord = discord_client
+        self._update(data)
+
+    def _update(self, data):
+        self.mention_count = int(data.get('mention_count'))
+        self.channel = self.discord.get_channel(data.get('id'))
+        self.last_message = self.channel.get_message(data.get('last_message'))
