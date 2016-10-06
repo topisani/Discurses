@@ -16,7 +16,7 @@ $ pip install discurses
 Python 3.5 is required.
 
 ### Windows
-Start out by following [https://wiki.archlinux.org/index.php/Installation_guide](this) guide.
+Start out by following [this](https://wiki.archlinux.org/index.php/Installation_guide) guide.
 
 After that, follow the instructions for linux above
 
