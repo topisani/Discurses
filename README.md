@@ -1,4 +1,6 @@
 # Discurses
+[![PyPI version](https://badge.fury.io/py/discurses.svg)](https://badge.fury.io/py/discurses)  
+
 A CLI for discord, written in python. The name is a combination of discord and curses, as in the terminal interface library. Discurses doesn't use curses, but i originally planned to. It is now built using urwid, a widget library which _can_ use curses as a rendering engine, but discurses works fine without it.
 
 Questions, bug reports, PR's and comments are all very welcome.  
