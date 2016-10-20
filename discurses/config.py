@@ -17,11 +17,14 @@ async def send_notification(discord, message):
     This will be called depending on the current notification settings
     """
     avatar = await discord.get_avatar(message.author)
+    nickname = message.author.nick
+    if nickname == None:
+        nickname = message.author.name
     os.system(
         "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
         .format(
             avatar=shlex.quote(avatar),
-            author=shlex.quote(message.author.name),
+            author=shlex.quote(nickname),
             server=shlex.quote(message.server.name),
             channel=shlex.quote(message.channel.name),
             content=shlex.quote(message.clean_content)))
