@@ -233,7 +233,10 @@ class MessageWidget(urwid.WidgetWrap):
         channel_name = self.chat_widget.channel_names[self.message.channel]
         channel_width = min(len(channel_name) + 1, 20)
         author_name = self.message.author.name
-        author_width_extra = 1 if len(author_name.encode("utf-8")) > len(author_name) else 0
+        author_nickname = self.message.author.nick
+        if author_nickname == None:
+            author_nickname = author_name
+        author_width_extra = 1 if len(author_nickname.encode("utf-8")) > len(author_nickname) else 0
         author_width = 30 - channel_width + author_width_extra
         channel_attr_map = "message_channel" if len(
             self.chat_widget.
@@ -258,7 +261,7 @@ class MessageWidget(urwid.WidgetWrap):
             self.Column(
                 'author',
                 True, ('given', author_width),
-                "{0}:".format(author_name.encode("utf-8")[:author_width].decode("utf-8", "ignore")),
+                "{0}:".format(author_nickname.encode("utf-8")[:author_width].decode("utf-8", "ignore")),
                 attr_map="message_author",
                 padding=(0, 1),
                 align="right"
