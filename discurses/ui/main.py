@@ -2,16 +2,19 @@ import re
 
 import urwid
 
+from discurses.ui import HasModal
 from discurses.ui import ChatWidget
 from discurses import keymaps
 
 
-class MainUI:
+class MainUI(HasModal):
     palette = [
         ("focus", "dark red", "", "standout"),
         ("dim", "dark cyan", "", "standout"),
         ("head", "light red", ""),
         ("message_timestamp", "dark cyan", "", ""),
+
+
         ("message_channel", "dark green", "", ""),
         ("message_author", "light blue", "", ""),
         ("message_content", "white", "", ""),
@@ -59,8 +62,11 @@ class MainUI:
         """,
                     align=urwid.CENTER)),
             header=self.w_tabs)
+
+        HasModal.__init__(self, self.frame)
+
         self.urwid_loop = urwid.MainLoop(
-            self.frame,
+            self.w_placeholder,
             palette=MainUI.palette,
             unhandled_input=lambda key: self._keypress(None, key),
             event_loop=urwid.AsyncioEventLoop(loop=self.discord.loop),
@@ -73,6 +79,7 @@ class MainUI:
         self.urwid_loop.set_alarm_in(0.2, refresh)
 
         self.urwid_loop.start()
+
 
     @keymaps.GLOBAL.keypress
     def _keypress(self, nothing, input):

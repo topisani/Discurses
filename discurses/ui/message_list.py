@@ -53,6 +53,7 @@ class MessageListWidget(urwid.WidgetWrap):
             for mw in self.list_walker:
                 if m.id == mw.message.id:
                     self.list_walker.remove(mw)
+                    logger.info("Removed message from listview")
                     break
 
     def scroll_to_bottom(self):
@@ -124,6 +125,8 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
             if messages == [] and len(
                     self.list_widget.chat_widget.channels) > 0:
                 self.top_reached = True
+
+
                 messages = [TopReachedWidget(self.list_widget.chat_widget)]
             self[0:0] = messages
             self.sort_messages()
@@ -233,9 +236,7 @@ class MessageWidget(urwid.WidgetWrap):
         channel_name = self.chat_widget.channel_names[self.message.channel]
         channel_width = min(len(channel_name) + 1, 20)
         author_name = self.message.author.name
-        author_nickname = self.message.author.nick
-        if author_nickname == None:
-            author_nickname = author_name
+        author_nickname = self.message.author.display_name
         author_width_extra = 1 if len(author_nickname.encode("utf-8")) > len(author_nickname) else 0
         author_width = 30 - channel_width + author_width_extra
         channel_attr_map = "message_channel" if len(
@@ -299,6 +300,13 @@ class MessageWidget(urwid.WidgetWrap):
             self.discord.async(self.discord.delete_message(self.message))
 
     @keymaps.MESSAGE_LIST_ITEM.command
+    def ask_delete_message(self):
+        def callback(bool):
+            if bool:
+                self.delete_message()
+        self.chat_widget.open_confirm_prompt(callback, "Delete message?", self.message.author.display_name + ":\n   " + self.message.content)
+
+    @keymaps.MESSAGE_LIST_ITEM.command
     def quote_message(self):
         self.chat_widget.edit_message.reply_to(self.message)
         self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
@@ -313,6 +321,11 @@ class MessageWidget(urwid.WidgetWrap):
     def yank_message(self):
         discurses.config.to_clipboard(self.message.clean_content)
         return
+
+    @keymaps.MESSAGE_LIST_ITEM.command
+    def select_channel(self):
+        self.chat_widget.set_send_channel(self.message.channel)
+        self.chat_widget.message_list.focus_message_textbox()
 
     class Column:
         def __init__(self,

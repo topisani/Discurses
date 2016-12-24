@@ -3,6 +3,8 @@ from typing import Dict, List
 
 import discord
 
+import logging
+logger = logging.getLogger(__name__)
 
 def format_incomming(text: str) -> str:
     return text
@@ -38,7 +40,6 @@ def shorten_channel_names(channels: List[discord.Channel], length) -> Dict[disco
                     else:
                         exceeds2 += len(word)
                 result[ch] = str.join("-", ch_name)
-                print(exceeds2)
     else:
         for ch in channels:
             result[ch] = "{0}#{1}".format(ch.server.name, ch.name)

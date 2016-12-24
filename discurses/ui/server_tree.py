@@ -5,8 +5,10 @@ import discurses.keymaps as keymaps
 
 
 class ServerTree(urwid.WidgetWrap):
-    def __init__(self, chat_widget):
+    def __init__(self, chat_widget, close_callback=None):
         self.chat_widget = chat_widget
+        self.ui = chat_widget.ui
+        self.close_callback = close_callback
         items = []
         for server in sorted(chat_widget.discord.servers, key=lambda s: s.name):
             node = {"name": server.name,
@@ -35,6 +37,10 @@ class ServerTree(urwid.WidgetWrap):
     def keypress(self, size, key):
         return self.w_listbox.keypress(size, key)
 
+    @keymaps.SERVER_TREE.command
+    def close(self):
+        if self.close_callback:
+            self.close_callback()
 
 class TreeWidgetChannel(urwid.TreeWidget):
     def get_display_text(self):
@@ -71,7 +77,7 @@ class TreeWidgetChannel(urwid.TreeWidget):
     @keymaps.SERVER_TREE_CHANNEL.command
     def exit(self):
         server_tree = self.get_node().get_value()['server_tree']
-        server_tree.chat_widget.close_pop_up()
+        server_tree.close()
 
     def selectable(self):
         return True
@@ -132,7 +138,7 @@ class TreeWidgetServer(urwid.TreeWidget):
     @keymaps.SERVER_TREE_SERVER.command
     def exit(self):
         server_tree = self.get_node().get_value()['server_tree']
-        server_tree.chat_widget.close_pop_up()
+        server_tree.close()
 
 
 class TreeNodeChannel(urwid.TreeNode):

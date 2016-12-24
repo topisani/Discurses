@@ -1,19 +1,23 @@
 import os
+import sys
 from enum import Enum
 from typing import List
 
+import logging
 import discord
 from discord import Channel, Message
 
 import discurses.config as config
 import discurses.ui as ui
 
+logger = logging.getLogger(__name__)
 
 class DiscordClient(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ui = ui.MainUI(self)
         self._server_settings = {}
+        self.read_state = {}
         self.event_handlers = {
             "on_message": [],
             "on_message_edit": [],
@@ -21,7 +25,8 @@ class DiscordClient(discord.Client):
             "on_typing": [],
         }
 
-    def add_event_handler(self, event: str, f):
+    def add_event_handler(self, event, f):
+        logger.debug("Added event handler for %s: %s" % (event, f.__module__ + "." + f.__class__.__name__ + "." + f.__name__))
         self.event_handlers[event].append(f)
 
     async def on_ready(self):
@@ -32,18 +37,22 @@ class DiscordClient(discord.Client):
         ss = await self.get_server_settings(m.server)
         if ss.should_be_notified(m):
             await config.send_notification(self, m)
+        logger.debug("Running %d event handlers for on_message" % len(self.event_handlers["on_message"]))
         for f in self.event_handlers['on_message']:
             f(m)
 
     async def on_message_edit(self, before: Message, after: Message):
+        logger.debug("Running %d event handlers for on_message_edit" % len(self.event_handlers["on_message_edit"]))
         for f in self.event_handlers['on_message_edit']:
             f(before, after)
 
     async def on_message_delete(self, m: Message):
+        logger.debug("Running %d event handlers for on_message_delete" % len(self.event_handlers["on_message_delete"]))
         for f in self.event_handlers['on_message_delete']:
             f(m)
 
     async def on_typing(self, channel, user, when):
+        logger.debug("Running %d event handlers for on_typing" % len(self.event_handlers["on_typing"]))
         for f in self.event_handlers['on_typing']:
             f(channel, user, when)
 
@@ -55,10 +64,10 @@ class DiscordClient(discord.Client):
 
     async def get_logs_from(self, channel: Channel) -> List[Message]:
         messages = []
-        print("getting logs")
+        logger.info("getting logs")
         async for m in self.logs_from(channel, limit=20):
             messages.append(m)
-        print("got logs")
+        logger.info("got logs")
         return messages
 
     async def on_socket_response(self, data):
@@ -76,7 +85,7 @@ class DiscordClient(discord.Client):
         if t == 'USER_GUILD_SETTINGS_UPDATE':
                 d['server'] = self.get_server(d.get('guild_id'))
                 self._server_settings[d.get('guild_id')] = ServerSettings(self, d)
-            
+
     async def get_server_settings(self, server): 
         if server.id not in self._server_settings:
             self._server_settings[server.id] = ServerSettings(
@@ -165,6 +174,5 @@ class ReadState:
         self._update(data)
 
     def _update(self, data):
-        self.mention_count = int(data.get('mention_count'))
         self.channel = self.discord.get_channel(data.get('id'))
-        self.last_message = self.channel.get_message(data.get('last_message'))
+        self.last_message = self.discord.get_message(self.channel, data.get('last_message_id'))

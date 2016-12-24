@@ -6,12 +6,12 @@ import urwid
 import discurses.config
 import discurses.keymaps as keymaps
 import discurses.processing
-from discurses.ui import (MessageEditWidget, MessageListWidget,
+from discurses.ui import (HasModal, MessageEditWidget, MessageListWidget,
                           SendChannelSelector, ServerTree)
 from discurses.ui.lib import TextEditWidget
 
 
-class ChatWidget(urwid.WidgetWrap):
+class ChatWidget(urwid.WidgetWrap, HasModal):
     """This widget holds:
         1. A MessageListWidget of all the messages in channels
         2. A EditMessageWidget, sending messages to send_channel
@@ -31,14 +31,10 @@ class ChatWidget(urwid.WidgetWrap):
         self.edit_message = MessageEditWidget(self.discord, self)
         self.frame = urwid.Pile([('weight', 1, self.message_list),
                                  ('pack', self.edit_message)], 1)
-        self.pop_up = urwid.Frame(urwid.WidgetPlaceholder(None))
-        self.pop_up_overlay = urwid.Overlay(
-            urwid.LineBox(self.pop_up), self.frame, 'center', ('relative', 60),
-            'middle', ('relative', 60))
-        self.w_placeholder = urwid.WidgetPlaceholder(self.frame)
+        HasModal.__init__(self, self.frame)
         self.__super.__init__(self.w_placeholder)
         if len(channels) == 0:
-            self.open_pop_up(ServerTree(self))
+            self.popup_server_tree()
 
     @keymaps.CHAT.keypress
     def keypress(self, size, key):
@@ -46,7 +42,9 @@ class ChatWidget(urwid.WidgetWrap):
 
     @keymaps.CHAT.command
     def popup_server_tree(self):
-        self.open_pop_up(ServerTree(self))
+        def cb():
+            self.close_pop_up()
+        self.open_pop_up(ServerTree(self, close_callback=cb))
 
     @keymaps.GLOBAL.command
     def redraw(self):
@@ -109,32 +107,7 @@ class ChatWidget(urwid.WidgetWrap):
         self.w_channel_cols.update_columns()
         self.edit_message.update_text()
 
-    def open_pop_up(self,
-                    widget,
-                    header=None,
-                    footer=None,
-                    height=('relative', 60),
-                    width=('relative', 60)):
-        self.pop_up.body.original_widget = widget
-        self.pop_up.header = header
-        self.pop_up.footer = footer
-        self.pop_up_overlay.set_overlay_parameters('center', width, 'middle',
-                                                   height)
-        self.w_placeholder.original_widget = self.pop_up_overlay
-
-    def open_text_prompt(self, callback, title="", content=""):
-        self.open_pop_up(
-            urwid.Filler(TextEditWidget(
-                callback, content=content)),
-            header=urwid.Text(
-                title, align='center'),
-            height=6,
-            width=50)
-
-    def close_pop_up(self):
-        self.pop_up.body.original_widget = None
-        self.pop_up.header = None
-        self.pop_up.footer = None
-        self.pop_up_overlay.set_overlay_parameters('center', ('relative', 60),
-                                                   'middle', ('relative', 60))
-        self.w_placeholder.original_widget = self.frame
+    def set_send_channel(self, channel):
+        self.send_channel = channel
+        self.message_list.update_all_columns()
+        self.w_channel_cols.update_columns()

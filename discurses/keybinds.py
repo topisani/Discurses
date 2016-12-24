@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 def parameterized(dec):
     """
     Meta decorator.
@@ -117,6 +121,7 @@ class KeyMap:
         Will return `None` or the result of the last function that wasnt `None`
         """
         key = None
+        logger.debug("Calling %d commands for '%s'", len(self.commands[command]), command)
         for fn in self.commands[command]:
             k = fn(*args, **kwargs)
             if k is not None:

@@ -11,15 +11,20 @@ with open(CONFIG_FILE_PATH, 'r') as file:
     table = yaml.load(file)
 
 
+def create_dir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory
+
+create_dir(CACHE_AVATARS_PATH)
+
 async def send_notification(discord, message):
     """
     Send a system notification
     This will be called depending on the current notification settings
     """
     avatar = await discord.get_avatar(message.author)
-    nickname = message.author.nick
-    if nickname == None:
-        nickname = message.author.name
+    nickname = message.author.display_name
     os.system(
         "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
         .format(

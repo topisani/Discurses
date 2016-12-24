@@ -31,12 +31,12 @@ class MessageEditWidget(urwid.WidgetWrap):
     @keymaps.MESSAGE_TEXT_BOX.command
     def send_message(self):
         if self.edit.edit_text == "":
-            self.stop_edit()
+            self.cancel_edit()
             return
         if self.editing is not None:
             self.discord.async(
                 self.discord.edit_message(self.editing, self.edit.edit_text))
-            self.stop_edit()
+            self.cancel_edit()
         else:
             self.discord.async(
                 self.discord.send_message(self.chat_widget.send_channel,
@@ -182,7 +182,6 @@ class SendChannelSelector(urwid.WidgetWrap):
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def select_focused(self):
         self.select_channel(self.w_cols.focus_position)
-        self.chat_widget.channel_list_updated(get_logs=False)
 
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def exit(self):
@@ -195,8 +194,7 @@ class SendChannelSelector(urwid.WidgetWrap):
 
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def select_channel(self, index):
-        self.chat_widget.send_channel = self.chat_widget.channels[index]
-        self.update_columns()
+        self.chat_widget.set_send_channel(self.chat_widget.channels[index])
 
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def update_columns(self):
