@@ -378,6 +378,9 @@ Congratiulations! You have reached the top, Thats awesome! Unless the channel is
         w = urwid.Padding(txt, left=5, right=5)
         self.__super.__init__(w)
 
+    def update_columns(*args, **kwargs):
+        pass
+
 
 class FakeMessage:
     """Very much a temporary thing"""

@@ -1,5 +1,7 @@
 import urwid
 
+from discurses.ui.lib import TextEditWidget
+
 class HasModal:
 
     def __init__(self, main_widget):
