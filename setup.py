@@ -13,7 +13,7 @@ with open(path.join(here, 'LICENSE')) as f:
 
 setup(
     name='discurses',
-    version='0.1.0.b4',
+    version='0.2.0',
     description='Discord CLI written in python, based on urwid',
     long_description=readme,
     author='Topisani',
