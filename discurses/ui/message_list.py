@@ -212,7 +212,7 @@ class MessageWidget(urwid.WidgetWrap):
         self.ui = self.discord.ui
         self.chat_widget = chat_widget
         self.message = m
-        self.processed = discurses.processing.format_incomming(m.clean_content)
+        self.processed = discurses.processing.format_incomming(m, self.chat_widget)
         for at in m.attachments:
             self.processed += "\n" + at.get('url')
         self.columns_w = urwid.Columns([])

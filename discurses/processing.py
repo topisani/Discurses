@@ -1,20 +1,55 @@
 import re
-from typing import Dict, List
-
-import discord
 
 import logging
 logger = logging.getLogger(__name__)
 
-def format_incomming(text: str) -> str:
+def format_incomming(message, chat_widget):
+    text = message.content
+    newtxt = []
+    for m in re.split("(<(?:@|@!|#|@&)[0-9]+>)", text):
+        match = re.match("<(@|@!|#|@&)([0-9]+)>", m)
+        if match:
+            typ = match.group(1)
+            snflk = match.group(2)
+            if typ == "@":
+                logger.debug("Mention (User) found")
+                member = next((memb for memb in message.mentions if memb.id == snflk), None)
+                if member:
+                    if member.id == chat_widget.discord.user.id:
+                        newtxt.append(("message_mention_self", "@"+member.name))
+                    else:
+                        newtxt.append(("message_mention", "@"+member.name))
+                    continue
+            elif typ == "@!":
+                logger.debug("Mention (Nickname) found")
+                member = next((memb for memb in message.mentions if memb.id == snflk), None)
+                if member:
+                    if member.id == chat_widget.discord.user.id:
+                        newtxt.append(("message_mention_self", "@"+member.display_name))
+                    else:
+                        newtxt.append(("message_mention", "@"+member.display_name))
+                    continue
+            elif typ == "#":
+                logger.debug("Mention (Channel) found")
+                channel = next((chan for chan in message.channel_mentions if chan.id == snflk), None)
+                if channel:
+                    newtxt.append(("message_mention", "#"+channel.name))
+                    continue
+            elif typ == "@&":
+                logger.debug("Mention (Role) found")
+                role = next((role for role in message.role_mentions if role.id == snflk), None)
+                if role:
+                    newtxt.append(("message_mention", "@"+role.name))
+                    continue
+        newtxt.append(m)
+    return newtxt
+
+
+def format_outgoing(text):
     return text
 
 
-def format_outgoing(text: str) -> str:
-    return text
-
-
-def shorten_channel_names(channels: List[discord.Channel], length) -> Dict[discord.Channel, str]:
+def shorten_channel_names(channels, length):
     if len(channels) == 0:
         return {}
     same_server = True
