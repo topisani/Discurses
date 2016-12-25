@@ -25,7 +25,7 @@ logging.config.dictConfig({
             "formatter": "standard",
             "filename": LOG_FILE_PATH,
             "maxBytes": 10485760,
-            "backupCount": 2,
+            "backupCount": 0,
             "encoding": "utf8"
         },
     },

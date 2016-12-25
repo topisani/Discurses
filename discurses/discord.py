@@ -34,6 +34,10 @@ class DiscordClient(discord.Client):
         self.ui.on_ready()
 
     async def on_message(self, m: Message):
+        if m.channel.is_private:
+            logger.warn("PM's not yet implemented")
+            logger.info("%s in chat with %s: %s", m.author.display_name, str.join(", ", (r.display_name for r in m.channel.recipients)), m.clean_content)
+            return
         ss = await self.get_server_settings(m.server)
         if ss.should_be_notified(m):
             await config.send_notification(self, m)
