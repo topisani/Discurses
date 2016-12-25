@@ -111,3 +111,4 @@ class ChatWidget(urwid.WidgetWrap, HasModal):
         self.send_channel = channel
         self.message_list.update_all_columns()
         self.w_channel_cols.update_columns()
+        self.edit_message.update_text()
