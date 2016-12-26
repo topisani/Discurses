@@ -1,4 +1,5 @@
 import re
+import logging
 
 import urwid
 
@@ -6,45 +7,35 @@ from discurses.ui import HasModal
 from discurses.ui import ChatWidget
 from discurses import keymaps
 
+logger = logging.getLogger(__name__)
 
 class MainUI(HasModal):
     palette = [
-        ("focus", "dark red", "", "standout"),
-        ("dim", "dark cyan", "", "standout"),
-        ("head", "light red", ""),
-        ("message_timestamp", "dark cyan", "", ""),
-
-
-        ("message_channel", "light green", "", "bold"),
-        ("message_author", "light blue", "", ""),
-        ("message_content", "white", "", ""),
-        ("message_channel_cur", "dark green", "", ""),
-        ("message_timestamp_f", "black", "dark cyan", "bold"),
-        ("message_channel_f", "black", "light green", "bold"),
-        ("message_author_f", "black", "light blue", "bold"),
-        ("message_content_f", "black", "white", ""),
-        ("message_channel_cur_f", "black", "dark green", "bold"),
-        ("message_mention", "white", "dark gray", "standout"),
-        ("message_mention_f", "white", "dark gray", "standout"),
-        ("message_mention_self", "light green", "dark gray", ""),
-        ("message_mention_self_f", "light green", "dark gray", ""),
-        ("send_channel_selector", "light red", "", ""),
-        ("send_channel_selector_f", "black", "light red", ""),
-        ("send_channel_selector_sel", "", "dark red", ""),
-        ("send_channel_selector_sel_f", "black", "light red", ""),
-        ("servtree_channel", "", "", ""),
-        ("servtree_channel_f", "black", "white", "bold"),
-        ("servtree_server", "", "", ""),
-        ("servtree_server_f", "black", "white", "bold"),
-        ("sidebar_user_on", "dark green", "", ""),
-        ("sidebar_user_off", "dark red", "", ""),
-        ("sidebar_user_idle", "yellow", "", ""),
-        ("sidebar_user_on_f", "black", "dark green", ""),
-        ("sidebar_user_off_f", "black", "dark red", ""),
-        ("sidebar_user_idle_f", "black", "yellow", ""),
-        ("tab_selector_tab", "black", "light gray", ""),
-        ("tab_selector_tab_f", "light gray", "", ""),
+        ("focus",                     "dark red",    "default"    ),
+        ("dim",                       "dark cyan",   "default"    ),
+        ("head",                      "light red",   "default"    ),
+        ("message_timestamp",         "dark cyan",   "default"    ),
+        ("message_channel",           "light green", "default"    ),
+        ("message_author",            "light blue",  "default"    ),
+        ("message_content",           "default",     "default"    ),
+        ("message_channel_cur",       "dark green",  "default"    ),
+        ("message_mention",           "white",       "dark gray"  ),
+        ("message_mention_self",      "light green", "dark gray"  ),
+        ("send_channel_selector",     "light red",   "default"    ),
+        ("send_channel_selector_sel", "default",     "dark red"   ),
+        ("servtree_channel",          "default",     "default"    ),
+        ("servtree_server",           "default",     "default"    ),
+        ("sidebar_user_on",           "dark green",  "default"    ),
+        ("sidebar_user_off",          "dark red",    "default"    ),
+        ("sidebar_user_idle",         "yellow",      "default"    ),
+        ("tab_selector_tab",          "black",       "light gray" ),
     ]
+
+    # A dict to replace colours on focus
+    focus_attr = {c[0]: c[0] + "_f" for c in palette}
+
+    # Add focus versions
+    palette += [(c[0] + "_f", c[1]+",standout", c[2]) for c in palette if c[0] + "_f" not in (d[0] for d in palette)]
 
     def __init__(self, discord_client):
         self.discord = discord_client
@@ -94,6 +85,7 @@ class MainUI(HasModal):
 
     @keymaps.GLOBAL.keypress
     def _keypress(self, nothing, input):
+        logger.debug("Keypres reached global map: %s", input)
         if input is None or type(input) != str:
             return
         match = re.fullmatch("meta ([0-9])", input)

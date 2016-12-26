@@ -68,10 +68,10 @@ class DiscordClient(discord.Client):
 
     async def get_logs_from(self, channel: Channel) -> List[Message]:
         messages = []
-        logger.info("getting logs")
+        logger.debug("getting logs")
         async for m in self.logs_from(channel, limit=20):
             messages.append(m)
-        logger.info("got logs")
+        logger.debug("got logs")
         return messages
 
     async def on_socket_response(self, data):

@@ -5,6 +5,9 @@ import urwid
 
 import discurses.processing
 import discurses.keymaps as keymaps
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MessageListWidget(urwid.WidgetWrap):
@@ -100,7 +103,7 @@ class MessageListWidget(urwid.WidgetWrap):
 
 
 class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
-    def __init__(self, list_widget: MessageListWidget):
+    def __init__(self, list_widget):
         self.list_widget = list_widget
         self.is_polling = False
         self.top_reached = False
@@ -216,13 +219,7 @@ class MessageWidget(urwid.WidgetWrap):
         for at in m.attachments:
             self.processed += "\n" + at.get('url')
         self.columns_w = urwid.Columns([])
-        w = urwid.AttrMap(self.columns_w, None, {
-            "message_timestamp": "message_timestamp_f",
-            "message_channel": "message_channel_f",
-            "message_author": "message_author_f",
-            "message_content": "message_content_f",
-            "message_channel_cur": "message_channel_cur_f",
-        })
+        w = urwid.AttrMap(self.columns_w, None, discurses.ui.MainUI.focus_attr)
         self.update_columns()
         self.__super.__init__(w)
 
