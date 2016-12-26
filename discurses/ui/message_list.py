@@ -304,7 +304,9 @@ class MessageWidget(urwid.WidgetWrap):
         def callback(bool):
             if bool:
                 self.delete_message()
-        self.chat_widget.open_confirm_prompt(callback, "Delete message?", self.message.author.display_name + ":\n   " + self.message.content)
+        self.chat_widget.open_confirm_prompt(callback,
+            "Delete message?",
+            [self.message.author.display_name + ":\n   ", discurses.processing.format_incomming(self.message, self.chat_widget)])
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def quote_message(self):

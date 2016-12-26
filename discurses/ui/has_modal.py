@@ -1,6 +1,9 @@
 import urwid
 
 from discurses.ui.lib import TextEditWidget
+import logging
+
+logger = logging.getLogger(__name__)
 
 class HasModal:
 
@@ -36,14 +39,14 @@ class HasModal:
             height=6,
             width=50)
 
-    def open_confirm_prompt(self, callback, title="", content="", yestxt="Yes", notxt="No"):
+    def open_confirm_prompt(self, callback, title="", content="", yestxt="Yes", notxt="No", align="center"):
         def create_cb(bool):
             def res(*k, **a):
                 callback(bool)
                 self.close_pop_up()
             return res
         self.open_pop_up(
-            urwid.Filler(urwid.Text(content, align='center')),
+            urwid.Filler(urwid.Text(content, align=align)),
             header=urwid.Text(
                 title, align='center'),
             footer=urwid.Columns([
@@ -53,6 +56,7 @@ class HasModal:
             height=6,
             width=50)
         self.pop_up.set_focus("footer")
+        logger.debug("Confirm prompt text: " + str(content))
 
     def close_pop_up(self):
         self.pop_up.body.original_widget = None

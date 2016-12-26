@@ -34,7 +34,7 @@ MESSAGE_LIST = KeyMap({
 MESSAGE_LIST_ITEM = KeyMap({
     "enter": "edit_message",
     "delete": "ask_delete_message",
-    "r": "quote_message",
+    "r": ["quote_message", "select_channel"],
     "m": "mention_author",
     "y": "yank_message",
     "s": "select_channel",

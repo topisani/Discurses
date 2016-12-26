@@ -42,6 +42,7 @@ def format_incomming(message, chat_widget):
                     newtxt.append(("message_mention", "@"+role.name))
                     continue
         newtxt.append(m)
+    #logger.debug("Processed: " + str(newtxt))
     return newtxt
 
 
