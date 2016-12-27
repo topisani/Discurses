@@ -9,33 +9,50 @@ from discurses import keymaps
 
 logger = logging.getLogger(__name__)
 
+
+def list_remove(lst, item):
+    if item in lst:
+        lst.remove(item)
+    return lst
+
 class MainUI(HasModal):
     palette = [
-        ("focus",                     "dark red",    "default"    ),
-        ("dim",                       "dark cyan",   "default"    ),
-        ("head",                      "light red",   "default"    ),
-        ("message_timestamp",         "dark cyan",   "default"    ),
-        ("message_channel",           "light green", "default"    ),
-        ("message_author",            "light blue",  "default"    ),
-        ("message_content",           "default",     "default"    ),
-        ("message_channel_cur",       "dark green",  "default"    ),
-        ("message_mention",           "white",       "dark gray"  ),
-        ("message_mention_self",      "light green", "dark gray"  ),
-        ("send_channel_selector",     "light red",   "default"    ),
-        ("send_channel_selector_sel", "default",     "dark red"   ),
-        ("servtree_channel",          "default",     "default"    ),
-        ("servtree_server",           "default",     "default"    ),
-        ("sidebar_user_on",           "dark green",  "default"    ),
-        ("sidebar_user_off",          "dark red",    "default"    ),
-        ("sidebar_user_idle",         "yellow",      "default"    ),
-        ("tab_selector_tab",          "black",       "light gray" ),
+        ("focus",                     "dark red",        "default"  ),
+        ("dim",                       "dark cyan",       "default"  ),
+        ("head",                      "light red",       "default"  ),
+        ("message_timestamp",         "dark cyan",       "default"  ),
+        ("message_channel",           "light green",     "default"  ),
+        ("message_author",            "light blue",      "default"  ),
+        ("message_content",           "default",         "default"  ),
+        ("message_channel_cur",       "dark green",      "default"  ),
+        ("message_mention",           "white",           "dark gray"),
+        ("message_mention_self",      "light green",     "dark gray"),
+        ("send_channel_selector",     "light red",       "default"  ),
+        ("send_channel_selector_sel", "default",         "dark red" ),
+        ("servtree_channel",          "default",         "default"  ),
+        ("servtree_server",           "default",         "default"  ),
+        ("sidebar_user_on",           "dark green",      "default"  ),
+        ("sidebar_user_off",          "dark red",        "default"  ),
+        ("sidebar_user_idle",         "yellow",          "default"  ),
+        ("tab_selector_tab",          "default,standout","default"  ),
+        ("dateline",                  "dark red",        "default"  ),
     ]
 
     # A dict to replace colours on focus
     focus_attr = {c[0]: c[0] + "_f" for c in palette}
 
     # Add focus versions
-    palette += [(c[0] + "_f", c[1]+",standout", c[2]) for c in palette if c[0] + "_f" not in (d[0] for d in palette)]
+    cols = [c[0] for c in palette]
+    focus_palette = []
+    for c in palette:
+        if c[0] + "_f" not in cols:
+            if "standout" not in c[1]:
+                focus_palette.append((c[0] + "_f", c[1]+",standout", c[2]))
+            else:
+                logger.debug(c)
+                focus_palette.append((c[0] + "_f", str.join(",", list_remove(c[1].split(","), "standout")), c[2]))
+
+    palette += focus_palette
 
     def __init__(self, discord_client):
         self.discord = discord_client
@@ -108,7 +125,7 @@ class MainUI(HasModal):
     @keymaps.GLOBAL.command
     def redraw(widget, size, key):
         widget.draw_screen()
-    
+
     def set_tab(self, tab):
         if tab not in self.tabs.keys():
             self.tabs[tab] = (ChatWidget(

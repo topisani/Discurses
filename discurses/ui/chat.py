@@ -94,6 +94,10 @@ class ChatWidget(urwid.WidgetWrap, HasModal):
 
         discurses.config.file_picker(_callback, self)
 
+    @keymaps.CHAT.command
+    def refetch_messages(self):
+        self.message_list.list_walker.invalidate()
+
     def set_name(self, string):
         self.name = string
         self.ui.w_tabs.update_columns()
@@ -102,7 +106,7 @@ class ChatWidget(urwid.WidgetWrap, HasModal):
         self.channel_names = discurses.processing.shorten_channel_names(
             self.channels, 14)
         if get_logs:
-            self.message_list.list_walker.invalidate()
+            self.refetch_messages()
         self.message_list.w_sidebar.update_list()
         self.w_channel_cols.update_columns()
         self.edit_message.update_text()

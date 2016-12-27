@@ -141,11 +141,19 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
 
     def sort_messages(self):
         st = []
+        dates = []
         for mw in self:
-            if mw.message.id in st:
+            if mw.message.id in st or isinstance(mw, DatelineWidget):
                 self.remove(mw)
             else:
                 st.append(mw.message.id)
+            if isinstance(mw, MessageWidget):
+                if mw.message.timestamp.date() not in dates:
+                    dates.append(mw.message.timestamp.date())
+
+        for d in dates:
+            self.append(DatelineWidget(self.list_widget.chat_widget, d))
+            logger.debug("Added dateline")
         self.sort(key=lambda mw: mw.message.timestamp)
 
     def invalidate(self):
@@ -280,7 +288,7 @@ class MessageWidget(urwid.WidgetWrap):
                                             self.columns_w.options(
                                                 width_type=c.width[0],
                                                 width_amount=c.width[1]))
-                                           for c in visible_cols]
+                                for c in visible_cols]
 
     def selectable(self) -> bool:
         return True
@@ -356,7 +364,7 @@ class TopReachedWidget(urwid.WidgetWrap):
 
     def __init__(self, chat_widget):
         self.chat_widget = chat_widget
-        self.message = FakeMessage()
+        self.message = FakeMessage(datetime.datetime.min)
         self._selectable = False
         txt = urwid.Text(
             """
@@ -381,11 +389,25 @@ Congratiulations! You have reached the top, Thats awesome! Unless the channel is
         pass
 
 
+class DatelineWidget(urwid.WidgetWrap):
+    """Displays a date separator in the listwidget"""
+
+    def __init__(self, chat_widget, date):
+        self.chat_widget = chat_widget
+        self.message = FakeMessage(datetime.datetime.combine(date, datetime.datetime.min.time()))
+        self._selectable = False
+        txt = urwid.Text(("dateline", date.strftime("%d.%m.%Y")),
+                         align=urwid.LEFT)
+        self.__super.__init__(txt)
+
+    def update_columns(*args, **kwargs):
+        pass
+
 class FakeMessage:
     """Very much a temporary thing"""
 
-    def __init__(self):
-        self.timestamp = datetime.datetime.min
+    def __init__(self, timestamp):
+        self.timestamp = timestamp
         self.id = "0"
 
 

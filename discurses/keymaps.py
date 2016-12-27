@@ -24,6 +24,7 @@ CHAT = KeyMap({
     "meta n": "popup_rename_tab",
     "meta c": "popup_shell_command",
     "meta f": "popup_send_file",
+    "ctrl l": "refetch_messages",
 })
 
 MESSAGE_LIST = KeyMap({
