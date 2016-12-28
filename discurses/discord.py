@@ -12,17 +12,22 @@ import discurses.ui as ui
 
 logger = logging.getLogger(__name__)
 
-
 class DiscordClient(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.ui = ui.MainUI(self)
         self._server_settings = {}
         self.read_state = {}
+        self.event_handlers = {
+            "on_message": [],
+            "on_message_edit": [],
+            "on_message_delete": [],
+            "on_typing": [],
+        }
 
     def add_event_handler(self, event, f):
         logger.debug("Added event handler for %s: %s" % (event, f.__module__ + "." + f.__class__.__name__ + "." + f.__name__))
-        event_handlers[event].append(f)
+        self.event_handlers[event].append(f)
 
     async def on_ready(self):
         self.ui.notify("Logged in as %s" % self.user.name)
@@ -49,6 +54,11 @@ class DiscordClient(discord.Client):
         logger.debug("Running %d event handlers for on_message_delete" % len(self.event_handlers["on_message_delete"]))
         for f in self.event_handlers['on_message_delete']:
             f(m)
+
+    async def on_typing(self, channel, user, when):
+        logger.debug("Running %d event handlers for on_typing" % len(self.event_handlers["on_typing"]))
+        for f in self.event_handlers['on_typing']:
+            f(channel, user, when)
 
     async def login(self):
         await super().login(config.table['token'], bot=False)
@@ -170,34 +180,3 @@ class ReadState:
     def _update(self, data):
         self.channel = self.discord.get_channel(data.get('id'))
         self.last_message = self.discord.get_message(self.channel, data.get('last_message_id'))
-
-
-event_handlers = {
-    "on_message": [],
-    "on_message_edit": [],
-    "on_message_delete": [],
-    "on_typing": [],
-    "on_member_join": [],
-    "on_member_remove": [],
-    "on_member_update": [],
-}
-
-
-def _create_event_handler(name):
-    async def eh(self, *args, **kwargs):
-        logger.debug("Running %d event handlers for %s".format(
-            len(event_handlers[name]), name))
-        for f in event_handlers[name]:
-            f(*args, **kwargs)
-    return eh
-
-
-for event in event_handlers.keys():
-    setattr(DiscordClient, event, _create_event_handler(event))
-
-
-def event_handler(event):
-    def deco(f):
-        logger.debug("Added event handler for %s: %s" % (event, f.__module__ + "." + f.__class__.__name__ + "." + f.__name__))
-        event_handlers[event].append(f)
-    return deco
