@@ -422,6 +422,12 @@ class Sidebar(urwid.WidgetWrap):
         self.__super.__init__(urwid.Padding(self.w_listbox, left=2))
         keymaps.GLOBAL.add_command("redraw", self.update_list)
 
+        def updlst(*args, **kwargs):
+            self.update_list()
+        self.chat_widget.discord.add_event_handler("on_member_join", updlst)
+        self.chat_widget.discord.add_event_handler("on_member_remove", updlst)
+        self.chat_widget.discord.add_event_handler("on_member_update", updlst)
+
     def _get_user_attr(self, member):
         if member.status == discord.Status.online:
             return "sidebar_user_on"

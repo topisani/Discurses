@@ -23,7 +23,21 @@ class DiscordClient(discord.Client):
             "on_message_edit": [],
             "on_message_delete": [],
             "on_typing": [],
+            "on_member_join": [],
+            "on_member_remove": [],
+            "on_member_update": [],
         }
+
+        def _create_event_handler(name):
+            async def eh(*args, **kwargs):
+                logger.debug("Running {} event handlers for {}".format(
+                    len(self.event_handlers[name]), name))
+                for f in self.event_handlers[name]:
+                    f(*args, **kwargs)
+            return eh
+
+        for event in self.event_handlers.keys():
+            setattr(self, event, _create_event_handler(event))
 
     def add_event_handler(self, event, f):
         logger.debug("Added event handler for %s: %s" % (event, f.__module__ + "." + f.__class__.__name__ + "." + f.__name__))
@@ -44,21 +58,6 @@ class DiscordClient(discord.Client):
         logger.debug("Running %d event handlers for on_message" % len(self.event_handlers["on_message"]))
         for f in self.event_handlers['on_message']:
             f(m)
-
-    async def on_message_edit(self, before: Message, after: Message):
-        logger.debug("Running %d event handlers for on_message_edit" % len(self.event_handlers["on_message_edit"]))
-        for f in self.event_handlers['on_message_edit']:
-            f(before, after)
-
-    async def on_message_delete(self, m: Message):
-        logger.debug("Running %d event handlers for on_message_delete" % len(self.event_handlers["on_message_delete"]))
-        for f in self.event_handlers['on_message_delete']:
-            f(m)
-
-    async def on_typing(self, channel, user, when):
-        logger.debug("Running %d event handlers for on_typing" % len(self.event_handlers["on_typing"]))
-        for f in self.event_handlers['on_typing']:
-            f(channel, user, when)
 
     async def login(self):
         await super().login(config.table['token'], bot=False)
