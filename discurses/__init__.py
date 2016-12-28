@@ -1,8 +1,8 @@
-import discurses.discord
+import discurses.discord as discord
 import sys
 import logging
 import discurses.log
 
 def main():
-    client = discurses.discord.DiscordClient()
+    client = discord.DiscordClient()
     client.run()

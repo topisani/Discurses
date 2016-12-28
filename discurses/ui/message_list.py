@@ -1,10 +1,10 @@
 import datetime
 
-import discord
 import urwid
 
 import discurses.processing
 import discurses.keymaps as keymaps
+import discurses.discord
 import logging
 
 logger = logging.getLogger(__name__)
@@ -438,6 +438,10 @@ class Sidebar(urwid.WidgetWrap):
                 return self.w_listbox.keypress(size, "down") is not None
         return self.w_listbox.mouse_event(size, event, button, col, row, focus)
 
+
+    @discurses.discord.event_handler("on_member_join")
+    @discurses.discord.event_handler("on_member_remove")
+    @discurses.discord.event_handler("on_member_update")
     def update_list(self):
         async def callback():
             servers = set()
