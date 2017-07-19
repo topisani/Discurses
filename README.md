@@ -27,6 +27,7 @@ Put the file `example_discurses.yaml` in your `~/.config/` directory, replace th
 You can get the token by visiting [https://discordapp.com/channels/@me](https://discordapp.com/channels/@me), opening the developer tools (<kbd>Ctrl</kbd>+<kbd>shift</kbd>+<kbd>i</kbd> or <kbd>Command</kbd>+<kbd>shift</kbd>+<kbd>i</kbd>) and Click on the `Application` tab, then on the sidebar: `Local Storage` then click the URL from the dropdown and you should see the `token` key followed by your token, copy whats inside the speech marks and put it in your `.yaml` file.
 
 Note: the developer tools Local storage tab must first be enabled in its settings (for firefox users)
+[instructions](https://developer.mozilla.org/en-US/docs/Tools/Storage_Inspector)
 
 ## Authentification through editing the source
 get the token in the way described above, then edit ~/.local/lib/python3.5/site-packages/discurses/discord.py
