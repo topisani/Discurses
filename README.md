@@ -32,5 +32,9 @@ Note: the developer tools Local storage tab must first be enabled in its setting
 get the token in the way described above, then edit ~/.local/lib/python3.5/site-packages/discurses/discord.py
 and edit the async def login(self) to await super().login("YOUR_TOKEN",bot=False)
 
+## Usage 
+discurses 2> /dev/null
+redirect errors so they dont show up when using the application
+
 ## Contributing
 First of all, please do, and if you do, feel free to ask me any questions. Also, the issue reports are up for grabs, but id be very happy to be notified before you start work, just so we dont work on the same thing.
