@@ -39,6 +39,8 @@ class MessageListWidget(urwid.WidgetWrap):
         self.discord.ui.draw_screen()
 
     def _on_message(self, message):
+        if len(self.list_walker) == 0:
+            return  # No message to handle
         if message.timestamp.date() != self.list_walker[-1].message.timestamp.date():
             self.list_walker.append(DatelineWidget(self.chat_widget, message.timestamp.date()))
         if message.channel in self.chat_widget.channels:
