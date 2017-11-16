@@ -15,27 +15,28 @@ def list_remove(lst, item):
         lst.remove(item)
     return lst
 
+
 class MainUI(HasModal):
     palette = [
-        ("focus",                     "dark red",        "default"  ),
-        ("dim",                       "dark cyan",       "default"  ),
-        ("head",                      "light red",       "default"  ),
-        ("message_timestamp",         "dark cyan",       "default"  ),
-        ("message_channel",           "light green",     "default"  ),
-        ("message_author",            "light blue",      "default"  ),
-        ("message_content",           "default",         "default"  ),
-        ("message_channel_cur",       "dark green",      "default"  ),
-        ("message_mention",           "white",           "dark gray"),
-        ("message_mention_self",      "light green",     "dark gray"),
-        ("send_channel_selector",     "light red",       "default"  ),
-        ("send_channel_selector_sel", "default",         "dark red" ),
-        ("servtree_channel",          "default",         "default"  ),
-        ("servtree_server",           "default",         "default"  ),
-        ("sidebar_user_on",           "dark green",      "default"  ),
-        ("sidebar_user_off",          "dark red",        "default"  ),
-        ("sidebar_user_idle",         "yellow",          "default"  ),
-        ("tab_selector_tab",          "default,standout","default"  ),
-        ("dateline",                  "dark red",        "default"  ),
+        ("focus", "dark red", "default"),
+        ("dim", "dark cyan", "default"),
+        ("head", "light red", "default"),
+        ("message_timestamp", "dark cyan", "default"),
+        ("message_channel", "light green", "default"),
+        ("message_author", "light blue", "default"),
+        ("message_content", "default", "default"),
+        ("message_channel_cur", "dark green", "default"),
+        ("message_mention", "white", "dark gray"),
+        ("message_mention_self", "light green", "dark gray"),
+        ("send_channel_selector", "light red", "default"),
+        ("send_channel_selector_sel", "default", "dark red"),
+        ("servtree_channel", "default", "default"),
+        ("servtree_server", "default", "default"),
+        ("sidebar_user_on", "dark green", "default"),
+        ("sidebar_user_off", "dark red", "default"),
+        ("sidebar_user_idle", "yellow", "default"),
+        ("tab_selector_tab", "default,standout", "default"),
+        ("dateline", "dark red", "default"),
     ]
 
     # A dict to replace colours on focus
@@ -50,8 +51,10 @@ class MainUI(HasModal):
                 focus_palette.append((c[0] + "_f", c[1]+",standout", c[2]))
             else:
                 logger.debug(c)
-                focus_palette.append((c[0] + "_f", str.join(",", list_remove(c[1].split(","), "standout")), c[2]))
-
+                focus_palette.append(
+                    (c[0] + "_f",
+                     str.join(",", list_remove(c[1].split(","),
+                                               "standout")), c[2]))
     palette += focus_palette
 
     def __init__(self, discord_client):
@@ -61,24 +64,22 @@ class MainUI(HasModal):
         self.frame = urwid.Frame(
             urwid.Filler(
                 urwid.Text(
-                    """
-░█▀▄░▀█▀░█▀▀░█▀▀░█░█░█▀▄░█▀▀░█▀▀░█▀▀
-░█░█░░█░░▀▀█░█░░░█░█░█▀▄░▀▀█░█▀▀░▀▀█
-░▀▀░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀▀
-                              v0.2.4
-
-
- < Logging in... Hang tight! >
-  --------------------------- 
-         \   ^__^             
-          \  (oo)\_______     
-             (__)\       )\/\ 
-                 ||----w |    
-                 ||     ||    
-
-
-
-        """,
+                    "░█▀▄░▀█▀░█▀▀░█▀▀░█░█░█▀▄░█▀▀░█▀▀░█▀▀\n"
+                    "░█░█░░█░░▀▀█░█░░░█░█░█▀▄░▀▀█░█▀▀░▀▀█\n"
+                    "░▀▀░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀▀\n"
+                    "                              v0.2.4\n"
+                    "                                    \n"
+                    "                                    \n"
+                    " < Logging in... Hang tight! >      \n"
+                    "  ---------------------------       \n"
+                    "         \   ^__^                   \n"
+                    "          \  (oo)\_______           \n"
+                    "             (__)\       )\/\       \n"
+                    "                 ||----w |          \n"
+                    "                 ||     ||          \n"
+                    "                                    \n"
+                    "                                    \n"
+                    "                                    \n",
                     align=urwid.CENTER)),
             header=self.w_tabs)
 
@@ -98,7 +99,6 @@ class MainUI(HasModal):
         self.urwid_loop.set_alarm_in(0.2, refresh)
 
         self.urwid_loop.start()
-
 
     @keymaps.GLOBAL.keypress
     def _keypress(self, nothing, input):
@@ -190,17 +190,19 @@ class TabSelector(urwid.WidgetWrap):
     def _set_indicator(self, position):
         for col in self.w_cols.contents:
             col[0].attr.set_attr_map({None: "tab_selector_tab"})
-        self.w_cols.contents[position][0].attr.set_attr_map({None: "tab_selector_tab_f"})
-        
+        self.w_cols.contents[position][0].attr.set_attr_map(
+            {None: "tab_selector_tab_f"})
+
     def update_columns(self, focus=None):
         cols = []
         for index, tab in self.ui.tabs.items():
             cols.append((self.TabWidget(index, tab),
-                            self.w_cols.options('weight', 1)))
+                         self.w_cols.options('weight', 1)))
         self.w_cols.contents = cols
         for t, options in self.w_cols.contents:
             if t.index == focus:
-                self.w_cols.focus_position = self.w_cols.contents.index((t, options))
+                self.w_cols.focus_position = \
+                    self.w_cols.contents.index((t, options))
                 break
         if not cols == []:
             self._set_indicator(self.w_cols.focus_position)
@@ -215,5 +217,3 @@ class TabSelector(urwid.WidgetWrap):
                     widget.name, align="center"),
                 "tab_selector_tab")
             self.__super.__init__(self.attr)
-
-

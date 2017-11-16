@@ -1,5 +1,4 @@
 import os
-import re
 
 import urwid
 
@@ -8,7 +7,6 @@ import discurses.keymaps as keymaps
 import discurses.processing
 from discurses.ui import (HasModal, MessageEditWidget, MessageListWidget,
                           SendChannelSelector, ServerTree)
-from discurses.ui.lib import TextEditWidget
 
 
 class ChatWidget(urwid.WidgetWrap, HasModal):

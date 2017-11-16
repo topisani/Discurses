@@ -2,14 +2,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def parameterized(dec):
     """
     Meta decorator.
     Decorate a decorator that accepts the decorated function as first argument,
-    and then other arguments with this decorator, to be able to pass it arguments.
+    and then other arguments with this decorator, to be able to pass it
+    arguments.
 
     Source: http://stackoverflow.com/a/26151604
-    
+
     >>> @parameterized
     ... def multiply(f, n):
     ...     def dec(*args, **kwargs):
@@ -121,7 +123,8 @@ class KeyMap:
         Will return `None` or the result of the last function that wasnt `None`
         """
         key = None
-        logger.debug("Calling %d commands for '%s'", len(self.commands[command]), command)
+        logger.debug("Calling %d commands for '%s'",
+                     len(self.commands[command]), command)
         for fn in self.commands[command]:
             k = fn(*args, **kwargs)
             if k is not None:
