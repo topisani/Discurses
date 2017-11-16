@@ -10,7 +10,8 @@ class ServerTree(urwid.WidgetWrap):
         self.ui = chat_widget.ui
         self.close_callback = close_callback
         items = []
-        for server in sorted(chat_widget.discord.servers, key=lambda s: s.name):
+        for server in sorted(chat_widget.discord.servers,
+                             key=lambda s: s.name):
             node = {"name": server.name,
                     'server_tree': self,
                     'server': server,
@@ -41,6 +42,7 @@ class ServerTree(urwid.WidgetWrap):
     def close(self):
         if self.close_callback:
             self.close_callback()
+
 
 class TreeWidgetChannel(urwid.TreeWidget):
     def get_display_text(self):
@@ -124,12 +126,12 @@ class TreeWidgetServer(urwid.TreeWidget):
     def set_only(self, set_name=True):
         server_tree = self.get_node().get_value()['server_tree']
         children = self.get_node().get_value()['children']
-        server_tree.chat_widget.channels = sorted(
-                                                [ ch.get('channel') for ch in children ],
-                                            key=lambda c: c.name)
-        server_tree.chat_widget.send_channel = next((c for c in server_tree.chat_widget.channels
-                                                     if c.name == "general"
-                                                    ), server_tree.chat_widget.channels[0])
+        server_tree.chat_widget.channels = \
+            sorted([ch.get('channel') for ch in children],
+                   key=lambda c: c.name)
+        server_tree.chat_widget.send_channel = \
+            next((c for c in server_tree.chat_widget.channels
+                  if c.name == "general"), server_tree.chat_widget.channels[0])
         server_tree.chat_widget.channel_list_updated()
         if set_name:
             server_tree.chat_widget.set_name(self.get_node().get_value()[

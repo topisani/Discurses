@@ -1,5 +1,4 @@
 import os
-import sys
 from enum import Enum
 from typing import List
 
@@ -11,6 +10,7 @@ import discurses.config as config
 import discurses.ui as ui
 
 logger = logging.getLogger(__name__)
+
 
 class DiscordClient(discord.Client):
     def __init__(self, *args, **kwargs):
@@ -40,7 +40,10 @@ class DiscordClient(discord.Client):
             setattr(self, event, _create_event_handler(event))
 
     def add_event_handler(self, event, f):
-        logger.debug("Added event handler for %s: %s" % (event, f.__module__ + "." + f.__class__.__name__ + "." + f.__name__))
+        logger.debug("Added event handler for %s: %s" %
+                     (event,
+                      f.__module__ + "."
+                      + f.__class__.__name__ + "." + f.__name__))
         self.event_handlers[event].append(f)
 
     async def on_ready(self):
@@ -50,12 +53,18 @@ class DiscordClient(discord.Client):
     async def on_message(self, m: Message):
         if m.channel.is_private:
             logger.warn("PM's not yet implemented")
-            logger.info("%s in chat with %s: %s", m.author.display_name, str.join(", ", (r.display_name for r in m.channel.recipients)), m.clean_content)
+            logger.info("%s in chat with %s: %s",
+                        m.author.display_name,
+                        str.join(", ",
+                                 (r.display_name
+                                  for r in m.channel.recipients)),
+                        m.clean_content)
             return
         ss = await self.get_server_settings(m.server)
         if ss.should_be_notified(m):
             await config.send_notification(self, m)
-        logger.debug("Running %d event handlers for on_message" % len(self.event_handlers["on_message"]))
+        logger.debug("Running %d event handlers for on_message" %
+                     len(self.event_handlers["on_message"]))
         for f in self.event_handlers['on_message']:
             f(m)
 
@@ -80,16 +89,18 @@ class DiscordClient(discord.Client):
             server_settings = d.get('user_guild_settings')
             for ss in server_settings:
                 ss['server'] = self.get_server(ss.get('guild_id'))
-                self._server_settings[ss.get('guild_id')] = ServerSettings(self, ss)
+                self._server_settings[ss.get('guild_id')] = \
+                    ServerSettings(self, ss)
             read_state = d.get("read_state")
             for st in read_state:
                 rs = ReadState(self, st)
                 self.read_state[rs.channel] = rs
         if t == 'USER_GUILD_SETTINGS_UPDATE':
                 d['server'] = self.get_server(d.get('guild_id'))
-                self._server_settings[d.get('guild_id')] = ServerSettings(self, d)
+                self._server_settings[d.get('guild_id')] = \
+                    ServerSettings(self, d)
 
-    async def get_server_settings(self, server): 
+    async def get_server_settings(self, server):
         if server.id not in self._server_settings:
             self._server_settings[server.id] = ServerSettings(
                 self, {'server': server})
@@ -111,7 +122,9 @@ class DiscordClient(discord.Client):
         return filepath
 
     async def send_ack(self, message):
-        self.http.post(self.http.CHANNELS + "/" + message.channel.id + "/messages/" + message.id + "/ack")
+        self.http.post(self.http.CHANNELS + "/"
+                       + message.channel.id + "/messages/" +
+                       message.id + "/ack")
 
 
 class ServerSettings:
@@ -178,4 +191,5 @@ class ReadState:
 
     def _update(self, data):
         self.channel = self.discord.get_channel(data.get('id'))
-        self.last_message = self.discord.get_message(self.channel, data.get('last_message_id'))
+        self.last_message = self.discord.get_message(
+            self.channel, data.get('last_message_id'))

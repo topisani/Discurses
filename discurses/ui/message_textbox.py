@@ -43,7 +43,6 @@ class MessageEditWidget(urwid.WidgetWrap):
                                           self.edit.edit_text))
         self.edit.set_edit_text("")
 
-
     @keymaps.MESSAGE_TEXT_BOX.keypress
     def keypress(self, size, key):
         return self.pile.focus_item.keypress(size, key)
@@ -61,7 +60,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         if key == "enter":
             return key
         key = urwid.Edit.keypress(self.edit, size, key)
-        if key == None:
+        if key is None:
             if self.editing is None:
                 self.discord.async(
                     self.discord.send_typing(self.chat_widget.send_channel))

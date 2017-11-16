@@ -16,7 +16,9 @@ def create_dir(directory):
         os.makedirs(directory)
     return directory
 
+
 create_dir(CACHE_AVATARS_PATH)
+
 
 async def send_notification(discord, message):
     """

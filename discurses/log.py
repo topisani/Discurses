@@ -1,7 +1,6 @@
 import logging
 import logging.config
 import os
-import sys
 
 LOG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".config", "discurses.log")

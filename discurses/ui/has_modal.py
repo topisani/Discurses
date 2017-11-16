@@ -5,15 +5,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class HasModal:
 
     def __init__(self, main_widget):
         self.main_widget = main_widget
         self.pop_up = urwid.Frame(urwid.WidgetPlaceholder(None))
         self.w_placeholder = urwid.WidgetPlaceholder(self.main_widget)
-        self.pop_up_overlay = urwid.Overlay(
-            urwid.LineBox(self.pop_up), self.main_widget, 'center', ('relative', 60),
-            'middle', ('relative', 60))
+        self.pop_up_overlay = urwid.Overlay(urwid.LineBox(self.pop_up),
+                                            self.main_widget,
+                                            'center',
+                                            ('relative', 60),
+                                            'middle',
+                                            ('relative', 60))
 
     def open_pop_up(self,
                     widget,
@@ -29,7 +33,6 @@ class HasModal:
         self.w_placeholder.original_widget = self.pop_up_overlay
         self.pop_up.set_focus("body")
 
-
     def open_text_prompt(self, callback, title="", content=""):
         self.open_pop_up(
             urwid.Filler(TextEditWidget(
@@ -39,7 +42,8 @@ class HasModal:
             height=6,
             width=50)
 
-    def open_confirm_prompt(self, callback, title="", content="", yestxt="Yes", notxt="No", align="center"):
+    def open_confirm_prompt(self, callback, title="", content="",
+                            yestxt="Yes", notxt="No", align="center"):
         def create_cb(bool):
             def res(*k, **a):
                 callback(bool)

@@ -41,8 +41,10 @@ class MessageListWidget(urwid.WidgetWrap):
     def _on_message(self, message):
         if len(self.list_walker) == 0:
             return  # No message to handle
-        if message.timestamp.date() != self.list_walker[-1].message.timestamp.date():
-            self.list_walker.append(DatelineWidget(self.chat_widget, message.timestamp.date()))
+        if message.timestamp.date() != \
+                self.list_walker[-1].message.timestamp.date():
+            self.list_walker.append(
+                DatelineWidget(self.chat_widget, message.timestamp.date()))
         if message.channel in self.chat_widget.channels:
             self.add_message(message)
 
@@ -125,16 +127,15 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
             messages = []
             for channel in self.list_widget.chat_widget.channels:
                 async for m in self.list_widget.discord.logs_from(
-                    channel, before=before):
+                        channel, before=before):
                     messages.append(
                         MessageWidget(self.list_widget.discord,
                                       self.list_widget.chat_widget, m))
             if messages == [] and len(
                     self.list_widget.chat_widget.channels) > 0:
                 self.top_reached = True
-
-
                 messages = [TopReachedWidget(self.list_widget.chat_widget)]
+
             self[0:0] = messages
             self.sort_messages()
             self._modified()
@@ -227,7 +228,8 @@ class MessageWidget(urwid.WidgetWrap):
         self.ui = self.discord.ui
         self.chat_widget = chat_widget
         self.message = m
-        self.processed = discurses.processing.format_incomming(m, self.chat_widget)
+        self.processed = discurses.processing.format_incomming(
+            m, self.chat_widget)
         for at in m.attachments:
             self.processed += "\n" + at.get('url')
         self.columns_w = urwid.Columns([])
@@ -244,13 +246,14 @@ class MessageWidget(urwid.WidgetWrap):
         channel_visible = len(self.chat_widget.channels) > 1
         channel_name = self.chat_widget.channel_names[self.message.channel]
         channel_width = min(len(channel_name) + 1, 20)
-        author_name = self.message.author.name
         author_nickname = self.message.author.display_name
-        author_width_extra = 1 if len(author_nickname.encode("utf-8")) > len(author_nickname) else 0
+        author_width_extra = 1 if \
+            len(author_nickname.encode("utf-8")) > len(author_nickname) else 0
         author_width = 30 - channel_width + author_width_extra
-        channel_attr_map = "message_channel" if len(
-            self.chat_widget.
-            channels) > 1 and self.message.channel == self.chat_widget.send_channel else "message_channel_cur"
+        channel_attr_map = "message_channel" \
+            if len(self.chat_widget.channels) > 1 and \
+            self.message.channel == self.chat_widget.send_channel \
+            else "message_channel_cur"
         self.columns = [
             self.Column(
                 'timestamp',
@@ -271,7 +274,8 @@ class MessageWidget(urwid.WidgetWrap):
             self.Column(
                 'author',
                 True, ('given', author_width),
-                "{0}:".format(author_nickname.encode("utf-8")[:author_width].decode("utf-8", "ignore")),
+                "{0}:".format(author_nickname.encode("utf-8")[:author_width].
+                              decode("utf-8", "ignore")),
                 attr_map="message_author",
                 padding=(0, 1),
                 align="right"
@@ -292,7 +296,7 @@ class MessageWidget(urwid.WidgetWrap):
                                             self.columns_w.options(
                                                 width_type=c.width[0],
                                                 width_amount=c.width[1]))
-                                for c in visible_cols]
+                                           for c in visible_cols]
 
     def selectable(self) -> bool:
         return True
@@ -304,8 +308,9 @@ class MessageWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def delete_message(self):
-        if self.message.author == self.discord.user or self.message.channel.permissions_for(
-                self.discord.user).manage_messages:
+        if self.message.author == self.discord.user or \
+                self.message.channel.permissions_for(self.discord.user).\
+                manage_messages:
             self.discord.async(self.discord.delete_message(self.message))
 
     @keymaps.MESSAGE_LIST_ITEM.command
@@ -313,9 +318,11 @@ class MessageWidget(urwid.WidgetWrap):
         def callback(bool):
             if bool:
                 self.delete_message()
-        self.chat_widget.open_confirm_prompt(callback,
-            "Delete message?",
-            [self.message.author.display_name + ":\n   ", discurses.processing.format_incomming(self.message, self.chat_widget)])
+        self.chat_widget.open_confirm_prompt(
+            callback, "Delete message?",
+            [self.message.author.display_name + ":\n   ",
+             discurses.processing.format_incomming(self.message,
+                                                   self.chat_widget)])
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def quote_message(self):
@@ -371,20 +378,21 @@ class TopReachedWidget(urwid.WidgetWrap):
         self.message = FakeMessage(datetime.datetime.min)
         self._selectable = False
         txt = urwid.Text(
-            """
-
-        
- _____                        
-< moo >                       
- -----                        
-        \   ^__^              
-         \  (oo)\_______      
-            (__)\       )\/\  
-                ||----w |     
-                ||     ||     
-
-        
-Congratiulations! You have reached the top, Thats awesome! Unless the channel is empty, in which case, meh... big deal.\n\n""",
+            "                                                               \n"
+            "                                                               \n"
+            "                                                               \n"
+            "                                                               \n"
+            "< moo >                                                        \n"
+            " -----                                                         \n"
+            "        \   ^__^                                               \n"
+            "         \  (oo)\_______                                       \n"
+            "            (__)\       )\/\                                   \n"
+            "                ||----w |                                      \n"
+            "                ||     ||                                      \n"
+            "                                                               \n"
+            "                                                               \n"
+            "Congratulations! You have reached the top, Thats awesome! Unless "
+            "the channel is empty, in which case, meh... big deal.\n\n",
             align=urwid.CENTER)
         w = urwid.Padding(txt, left=5, right=5)
         self.__super.__init__(w)
@@ -398,7 +406,9 @@ class DatelineWidget(urwid.WidgetWrap):
 
     def __init__(self, chat_widget, date):
         self.chat_widget = chat_widget
-        self.message = FakeMessage(datetime.datetime.combine(date, datetime.datetime.min.time()))
+        self.message = FakeMessage(
+            datetime.datetime.combine(date,
+                                      datetime.datetime.min.time()))
         self._selectable = False
         txt = urwid.Text(("dateline", date.strftime("%d.%m.%Y")),
                          align=urwid.LEFT)
@@ -406,6 +416,7 @@ class DatelineWidget(urwid.WidgetWrap):
 
     def update_columns(*args, **kwargs):
         pass
+
 
 class FakeMessage:
     """Very much a temporary thing"""
