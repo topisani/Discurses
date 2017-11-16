@@ -22,6 +22,10 @@ Start out by following [this](https://wiki.archlinux.org/index.php/Installation_
 
 After that, follow the instructions for linux above
 
+Seriously: urwid is *sadly* not supported on Windows, and since discurses is
+built on top of that, such an OS is not supported. You may use the official
+desktop client anyway.
+
 ## Authentication
 Put the file `example_discurses.yaml` in your `~/.config/` directory, replace the placeholder with your discord token and rename the file to `discurses.yaml`.
 You can get the token by visiting [https://discordapp.com/channels/@me](https://discordapp.com/channels/@me), opening the developer tools (<kbd>Ctrl</kbd>+<kbd>shift</kbd>+<kbd>i</kbd> or <kbd>Command</kbd>+<kbd>shift</kbd>+<kbd>i</kbd>) and Click on the `Application` tab, then on the sidebar: `Local Storage` then click the URL from the dropdown and you should see the `token` key followed by your token, copy whats inside the speech marks and put it in your `.yaml` file.
