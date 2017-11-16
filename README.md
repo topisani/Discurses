@@ -22,7 +22,7 @@ Start out by following [this](https://wiki.archlinux.org/index.php/Installation_
 
 After that, follow the instructions for linux above
 
-Seriously: urwid is *sadly* not supported on Linux, and since discurses is
+Seriously: urwid is *sadly* not supported on Windows, and since discurses is
 built on top of that, such an OS is not supported. You may use the official
 desktop client anyway.
 
