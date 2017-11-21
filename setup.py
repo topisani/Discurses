@@ -1,15 +1,25 @@
-# -*- coding: utf-8 -*-
-
-from setuptools import setup, find_packages
+#!/usr/bin/env python3
 from os import path
+from os.path import join
 
-here = path.abspath(path.dirname(__file__))
+from pip.req import parse_requirements
+from setuptools import find_packages, setup
 
-with open(path.join(here, 'README.md')) as f:
+CWD = path.abspath(path.dirname(__file__))
+
+with open(path.join(CWD, 'README.md')) as f:
     readme = f.read()
 
-with open(path.join(here, 'LICENSE')) as f:
+with open(path.join(CWD, 'LICENSE')) as f:
     license = f.read()
+
+
+def requires():
+    """Parse the requirements file and generate a requirements list."""
+    install_reqs = parse_requirements(join(CWD, 'requirements', 'base.txt'),
+                                      session=False)
+    return [str(ir.req) for ir in install_reqs]
+
 
 setup(
     name='discurses',
@@ -27,4 +37,7 @@ setup(
             'discurses=discurses:main',
         ],
     },
+    setup_requires=[
+        'setuptools_scm'
+    ],
 )
