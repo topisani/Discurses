@@ -126,7 +126,6 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
         async def _callback():
             messages = []
             for channel in self.list_widget.chat_widget.channels:
-                logger.debug(channel.id)
                 try:
                     async for m in self.list_widget.discord.logs_from(
                             channel, before=before):
