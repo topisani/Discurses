@@ -126,11 +126,7 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
         async def _callback():
             messages = []
             for channel in self.list_widget.chat_widget.channels:
-                async for m in self.list_widget.discord.logs_from(
-                        channel, before=before):
                     messages.append(
-                        MessageWidget(self.list_widget.discord,
-                                      self.list_widget.chat_widget, m))
             if messages == [] and len(
                     self.list_widget.chat_widget.channels) > 0:
                 self.top_reached = True
@@ -401,6 +397,10 @@ class TopReachedWidget(urwid.WidgetWrap):
         pass
 
 
+            "                                                               \n"
+            "                                                               \n"
+            "                                                               \n"
+            "                                                               \n"
 class DatelineWidget(urwid.WidgetWrap):
     """Displays a date separator in the listwidget"""
 
