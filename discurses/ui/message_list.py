@@ -131,10 +131,10 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
                             channel, before=before):
                         messages.append(
                             MessageWidget(self.list_widget.discord,
-                                        self.list_widget.chat_widget, m))
+                                          self.list_widget.chat_widget, m))
                 except discord.errors.Forbidden:
                     messages.append(
-                        ForbiddenWidget(self.list_widget.chat_widget))
+                                ForbiddenWidget(self.list_widget.chat_widget))
             if messages == [] and len(
                     self.list_widget.chat_widget.channels) > 0:
                 self.top_reached = True
@@ -426,13 +426,14 @@ class ForbiddenWidget(urwid.WidgetWrap):
             "                ||     ||                                      \n"
             "                                                               \n"
             "                                                               \n"
-            "Oops! This channel is Forbidden. You don't have access. Sorry!\n\n",
+            "Oops! This channel is Forbidden. You don't have access. Sorry!\n",
             align=urwid.CENTER)
         w = urwid.Padding(txt, left=5, right=5)
         self.__super.__init__(w)
 
     def update_columns(*args, **kwargs):
         pass
+
 
 class DatelineWidget(urwid.WidgetWrap):
     """Displays a date separator in the listwidget"""
