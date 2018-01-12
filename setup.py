@@ -23,7 +23,7 @@ def requires():
 
 setup(
     name='discurses',
-    version='0.2.4',
+    version='0.2.5',
     description='Discord CLI written in python, based on urwid',
     long_description=readme,
     author='Topisani',
