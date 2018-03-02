@@ -56,25 +56,38 @@ def format_incomming(message, chat_widget):
 def format_outgoing(text):
     return text
 
+def channel_name(ch):
+    if ch.is_private:
+        return ch.name or ', '.join(u.display_name for u in ch.recipients)
+    else:
+        return "{0}#{1}".format(ch.server.name, ch.name)
 
 def shorten_channel_names(channels, length):
     if len(channels) == 0:
         return {}
     same_server = True
-    server = channels[0].server
+    private = channels[0].is_private
+    server = None
+    if not private:
+        channels[0].server
     result = {}
     for ch in channels:
-        if not ch.server.id == server.id:
+        if private:
+            if not ch.is_private:
+                same_server = False
+                break
+        elif ch.server.id == server.id:
             same_server = False
             break
     if same_server:
         for ch in channels:
-            if len(ch.name) <= length:
-                result[ch] = ch.name
+            name = channel_name(ch)
+            if len(name) <= length:
+                result[ch] = name
             else:
-                exceeds = len(ch.name.replace("-", "").replace("_", "")) \
+                exceeds = len(name.replace("-", "").replace("_", "")) \
                     - length
-                words = re.split("[-_]", ch.name)
+                words = re.split("[-_]", name)
                 chars_per_word = exceeds // len(words)
                 ch_name = []
                 exceeds2 = 0
@@ -86,5 +99,5 @@ def shorten_channel_names(channels, length):
                 result[ch] = str.join("-", ch_name)
     else:
         for ch in channels:
-            result[ch] = "{0}#{1}".format(ch.server.name, ch.name)
+                result[ch] = channel_name(ch)
     return result

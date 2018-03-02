@@ -2,6 +2,7 @@ import discord
 import urwid
 
 import discurses.keymaps as keymaps
+import discurses.processing as processing
 
 
 class ServerTree(urwid.WidgetWrap):
@@ -23,7 +24,28 @@ class ServerTree(urwid.WidgetWrap):
                         'server_tree': self,
                         'channel': ch
                     })
+            nodeobj = TreeNodeServer(node)
+            nodeobj.expanded = False
+            items.append(nodeobj)
 
+        if len(chat_widget.discord.private_channels) > 0:
+            node = {"name": "Private Chats",
+                    'server_tree': self,
+                    'server': None,
+                    "children": []}
+            for ch in chat_widget.discord.private_channels:
+                name = ''
+                if ch.type == discord.ChannelType.private:
+                    name = ch.user.display_name
+                elif ch.type == discord.ChannelType.group:
+                    name = ch.name or ', '.join(u.display_name for u in ch.recipients)
+                else:
+                    continue
+                node['children'].append({
+                    'name': name,
+                    'server_tree': self,
+                    'channel': ch
+                })
             nodeobj = TreeNodeServer(node)
             nodeobj.expanded = False
             items.append(nodeobj)
@@ -55,6 +77,7 @@ class TreeWidgetChannel(urwid.TreeWidget):
 
     @keymaps.SERVER_TREE_CHANNEL.keypress
     def keypress(self, size, key):
+        print(key)
         return key
 
     @keymaps.SERVER_TREE_CHANNEL.command
@@ -73,8 +96,7 @@ class TreeWidgetChannel(urwid.TreeWidget):
         server_tree.chat_widget.send_channel = channel
         server_tree.chat_widget.channel_list_updated()
         if set_name:
-            server_tree.chat_widget.set_name("{}#{}".format(
-                channel.server.name, channel.name))
+            server_tree.chat_widget.set_name(processing.channel_name(channel))
 
     @keymaps.SERVER_TREE_CHANNEL.command
     def exit(self):
@@ -134,8 +156,8 @@ class TreeWidgetServer(urwid.TreeWidget):
                   if c.name == "general"), server_tree.chat_widget.channels[0])
         server_tree.chat_widget.channel_list_updated()
         if set_name:
-            server_tree.chat_widget.set_name(self.get_node().get_value()[
-                'server'].name)
+            server_tree.chat_widget.set_name(self.get_node().get_value()[ 'name'])
+
 
     @keymaps.SERVER_TREE_SERVER.command
     def exit(self):

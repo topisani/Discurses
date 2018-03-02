@@ -27,14 +27,23 @@ async def send_notification(discord, message):
     """
     avatar = await discord.get_avatar(message.author)
     nickname = message.author.display_name
-    os.system(
-        "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
-        .format(
-            avatar=shlex.quote(avatar),
-            author=shlex.quote(nickname),
-            server=shlex.quote(message.server.name),
-            channel=shlex.quote(message.channel.name),
-            content=shlex.quote(message.clean_content)))
+    if message.channel.is_private:
+        os.system(
+            "notify-send -i {avatar} \"{author} in chat with {users}:\" {content}"
+            .format(
+                avatar=shlex.quote(avatar),
+                author=shlex.quote(nickname),
+                content=shlex.quote(message.clean_content),
+                users=shlex.quote(', '.join(a.display_name for a in message.channel.recipients))))
+    else:
+        os.system(
+            "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
+            .format(
+                avatar=shlex.quote(avatar),
+                author=shlex.quote(nickname),
+                server=shlex.quote(message.server.name),
+                channel=shlex.quote(message.channel.name),
+                content=shlex.quote(message.clean_content)))
 
 
 def file_picker(callback, chat_widget):

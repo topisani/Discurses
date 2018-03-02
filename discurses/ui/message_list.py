@@ -496,7 +496,8 @@ class Sidebar(urwid.WidgetWrap):
             servers = set()
             memberset = set()
             for ch in self.chat_widget.channels:
-                servers.add(ch.server)
+                if not ch.is_private:
+                    servers.add(ch.server)
             for serv in servers:
                 for member in serv.members:
                     memberset.add(member)

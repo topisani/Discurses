@@ -2,7 +2,7 @@ import datetime
 
 import urwid
 
-import discurses.processing
+import discurses.processing as processing
 import discurses.keymaps as keymaps
 
 
@@ -16,10 +16,16 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.editing = None
         self.edit = urwid.Edit(multiline=True, allow_tab=True)
         self.edit.keypress = self._edit_keypress
-        self.w_lb = urwid.LineBox(urwid.Padding(self.edit, left=1, right=1))
-        self.w_text = urwid.Text("")
+        self.w_channel = urwid.Text("")
+        self.w_edit_line = urwid.Columns([('pack', self.w_channel), ('weight', 1, urwid.Padding(self.edit, left=1, right=1))])
         self.w_typing = TypingList(self)
         self.pile = urwid.Pile([])
+        self.status_left = urwid.Text("")
+        self.status_bar = urwid.AttrMap(
+            urwid.Padding(
+                urwid.Columns([('pack', self.status_left), ('weight', 1, self.w_typing)]),
+                left=1, right=1),
+            "statusbar")
         self.hide_channel_selector()
         self.__super.__init__(self.pile)
 
@@ -27,6 +33,9 @@ class MessageEditWidget(urwid.WidgetWrap):
         # This is where we can disable the edit widget
         # if the user is missing permissions
         return True
+
+    def set_channel_name(self, str):
+        self.w_channel.set_text("[{}]".format(str))
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def send_message(self):
@@ -67,7 +76,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         return key
 
     def edit_message(self, message):
-        self.w_text.set_text("Editing")
+        self.status_left.set_text("editing")
         self.editing = message
         self.edit.set_edit_text(message.content)
         self.edit.set_edit_pos(len(self.edit.edit_text))
@@ -78,18 +87,15 @@ class MessageEditWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def cancel_edit(self):
-        self.w_text.set_text(
-            " {}#{}".format(self.chat_widget.send_channel.server,
-                            self.chat_widget.send_channel.name))
+        self.status_left.set_text("")
         self.editing = None
         self.edit.set_edit_text("")
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def show_channel_selector(self):
         self.pile.contents = [
-            (self.w_lb, self.pile.options()), (urwid.Columns(
-                [('pack', self.w_text), ('weight', 1, self.w_typing)]),
-                                               self.pile.options()),
+            (self.status_bar, self.pile.options()),
+            (self.w_edit_line, self.pile.options()),
             (self.chat_widget.w_channel_cols, self.pile.options())
         ]
         self.pile.focus_position = 2
@@ -97,19 +103,15 @@ class MessageEditWidget(urwid.WidgetWrap):
     @keymaps.MESSAGE_TEXT_BOX.command
     def hide_channel_selector(self):
         self.pile.contents = [
-            (self.w_lb, self.pile.options()),
-            (urwid.Columns(
-                [('pack', self.w_text), ('weight', 1, self.w_typing)]),
-             self.pile.options()),
+            (self.status_bar, self.pile.options()),
+            (self.w_edit_line, self.pile.options()),
         ]
-        self.pile.focus_position = 0
+        self.pile.focus_position = 1
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def update_text(self):
-        if self.editing is None and self.chat_widget.send_channel is not None:
-            self.w_text.set_text(
-                " {}#{}".format(self.chat_widget.send_channel.server,
-                                self.chat_widget.send_channel.name))
+        if self.chat_widget.send_channel is not None:
+            self.set_channel_name(processing.channel_name(self.chat_widget.send_channel))
 
 
 class TypingList(urwid.WidgetWrap):
@@ -120,7 +122,7 @@ class TypingList(urwid.WidgetWrap):
         self.w_edit.discord.add_event_handler("on_typing", self.on_typing)
         self.w_edit.discord.add_event_handler("on_message", self.on_message)
         self.update_typing()
-        self.__super.__init__(self.w_txt)
+        self.__super.__init__(urwid.AttrMap(self.w_txt, "statusbar_typing"))
 
     def on_typing(self, channel, user, when):
         if channel in self.w_edit.chat_widget.channels:
@@ -198,7 +200,7 @@ class SendChannelSelector(urwid.WidgetWrap):
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def update_columns(self):
         cols = []
-        names = discurses.processing.shorten_channel_names(
+        names = processing.shorten_channel_names(
             self.chat_widget.channels, 100)
         for ch in self.chat_widget.channels:
             if ch == self.chat_widget.send_channel:

@@ -37,6 +37,8 @@ class MainUI(HasModal):
         ("sidebar_user_idle", "yellow", "default"),
         ("tab_selector_tab", "default,standout", "default"),
         ("dateline", "dark red", "default"),
+        ("statusbar", "white", "dark blue"),
+        ("statusbar_typing", "white,italics", "dark blue"), 
     ]
 
     # A dict to replace colours on focus
