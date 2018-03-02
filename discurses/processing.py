@@ -69,14 +69,14 @@ def shorten_channel_names(channels, length):
     private = channels[0].is_private
     server = None
     if not private:
-        channels[0].server
+        server = channels[0].server
     result = {}
     for ch in channels:
         if private:
             if not ch.is_private:
                 same_server = False
                 break
-        elif ch.server.id == server.id:
+        elif (not ch.is_private) and ch.server.id == server.id:
             same_server = False
             break
     if same_server:
