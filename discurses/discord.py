@@ -135,12 +135,14 @@ class ServerSettings:
             int(data.get('message_notifications', 0)))
         self.supress_everyone = data.get('supress_everyone', False)
         self.channel_overrides = {}
-        for chov in data.get('channel_overrides'):
-            self.channel_overrides[chov.get('channel_id')] = {
-                'muted': chov.get('muted', False),
-                'notifications':
-                NotificationSetting(int(chov.get('message_notifications'))),
-            }
+        channel_overrides = data.get('channel_overrides')
+        if channel_overrides is not None:
+            for chov in channel_overrides:
+                self.channel_overrides[chov.get('channel_id')] = {
+                    'muted': chov.get('muted', False),
+                    'notifications':
+                    NotificationSetting(int(chov.get('message_notifications'))),
+                }
 
     def get_notifications(self, channel):
         res = None
