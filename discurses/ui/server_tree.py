@@ -77,7 +77,6 @@ class TreeWidgetChannel(urwid.TreeWidget):
 
     @keymaps.SERVER_TREE_CHANNEL.keypress
     def keypress(self, size, key):
-        print(key)
         return key
 
     @keymaps.SERVER_TREE_CHANNEL.command

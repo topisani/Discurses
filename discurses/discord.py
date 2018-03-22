@@ -54,7 +54,6 @@ class DiscordClient(discord.Client):
     async def on_message(self, m: Message):
         if m.channel.is_private:
             await config.send_notification(self, m)
-            logger.debug("private message")
         else:
             ss = await self.get_server_settings(m.server)
             if ss.should_be_notified(m):

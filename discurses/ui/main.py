@@ -4,7 +4,7 @@ import logging
 import urwid
 
 from discurses.ui import HasModal
-from discurses.ui import ChatWidget
+from discurses.ui import ChatWindow
 from discurses import keymaps
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class MainUI(HasModal):
         ("tab_selector_tab", "default,standout", "default"),
         ("dateline", "dark red", "default"),
         ("statusbar", "white", "dark blue"),
-        ("statusbar_typing", "white,italics", "dark blue"), 
+        ("statusbar_typing", "white,italics", "dark blue"),
     ]
 
     # A dict to replace colours on focus
@@ -88,7 +88,7 @@ class MainUI(HasModal):
         HasModal.__init__(self, self.frame)
 
         self.urwid_loop = urwid.MainLoop(
-            self.w_placeholder,
+            self._w_placeholder,
             palette=MainUI.palette,
             unhandled_input=lambda key: self._keypress(None, key),
             event_loop=urwid.AsyncioEventLoop(loop=self.discord.loop),
@@ -117,7 +117,9 @@ class MainUI(HasModal):
 
     @keymaps.GLOBAL.command
     def quit(widget, size, key):
+        logger.info('User quit')
         widget.urwid_loop.stop()
+        widget.discord_loop.stop()
         raise urwid.ExitMainLoop()
 
     @keymaps.GLOBAL.command
@@ -130,7 +132,7 @@ class MainUI(HasModal):
 
     def set_tab(self, tab):
         if tab not in self.tabs.keys():
-            self.tabs[tab] = (ChatWidget(
+            self.tabs[tab] = (ChatWindow(
                 self.discord, [], None, name=str(tab + 1)))
         self.w_tabs.update_columns(tab)
         self.set_body(self.tabs[tab])

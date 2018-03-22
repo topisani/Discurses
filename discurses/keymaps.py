@@ -1,7 +1,7 @@
 from discurses.keybinds import KeyMap
 
 GLOBAL = KeyMap({
-    "ctrl q": "quit",
+    "meta q": "quit",
     "ctrl l": "redraw",
     "ctrl t": "focus_tab_selector",
     "meta t": "focus_tab_selector",
@@ -18,17 +18,17 @@ TAB_SELECTOR = KeyMap({
 })
 
 CHAT = KeyMap({
-    "meta s": "popup_server_tree",
+    "meta s": "toggle_server_list",
+    "meta b": "toggle_member_list",
     "up": "focus_up",
     "down": "focus_down",
-    "meta n": "popup_rename_tab",
-    "meta c": "popup_shell_command",
-    "meta f": "popup_send_file",
+    "meta n": "ask_rename_tab",
+    "meta c": "ask_shell_command",
+    "meta f": "ask_send_file",
     "ctrl l": "refetch_messages",
 })
 
 MESSAGE_LIST = KeyMap({
-    "b": "toggle_sidebar",
     "esc": "focus_message_textbox"
 })
 
@@ -39,6 +39,7 @@ MESSAGE_LIST_ITEM = KeyMap({
     "m": "mention_author",
     "y": "yank_message",
     "s": "select_channel",
+    " ": "select_channel",
 })
 
 MESSAGE_TEXT_BOX = KeyMap({

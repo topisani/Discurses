@@ -25,10 +25,7 @@ class MessageListWidget(urwid.WidgetWrap):
         self.discord.add_event_handler('on_message_delete',
                                        self._on_message_delete)
         self.scroll_to_bottom()
-        self.w_sidebar = Sidebar(chat_widget)
-        self.w_columns = urwid.Columns([('weight', 1, self.listbox)])
-        self.sidebar_visible = False
-        self.__super.__init__(self.w_columns)
+        self.__super.__init__(self.listbox)
 
     def add_message(self, message):
         self.list_walker.append(
@@ -88,24 +85,7 @@ class MessageListWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_LIST.command
     def focus_message_textbox(self):
-        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
-
-    @keymaps.MESSAGE_LIST.command
-    def toggle_sidebar(self, flag=None):
-        if flag is None:
-            flag = not self.sidebar_visible
-        if flag:
-            self.w_columns.contents = [
-                (self.listbox, self.w_columns.options('weight', 1)),
-                (self.w_sidebar, self.w_columns.options('weight', .25)),
-            ]
-            self.w_columns.focus_position = 1
-        else:
-            self.w_columns.contents = [
-                (self.listbox, self.w_columns.options('weight', 1)),
-            ]
-            self.w_columns.focus_position = 0
-        self.sidebar_visible = flag
+        self.chat_widget.set_focus('MESSAGE_EDIT')
 
 
 class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
@@ -278,7 +258,7 @@ class MessageWidget(urwid.WidgetWrap):
             self.Column(
                 'author',
                 True, ('given', author_width),
-                "{0}:".format(author_nickname.encode("utf-8")[:author_width].
+                "{0}:".format(author_nickname.encode("utf-8")[:author_width - 2].
                               decode("utf-8", "ignore")),
                 attr_map="message_author",
                 padding=(0, 1),
@@ -307,8 +287,8 @@ class MessageWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def edit_message(self):
-        self.chat_widget.edit_message.edit_message(self.message)
-        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+        self.chat_widget.w_message_edit.edit_message(self.message)
+        self.chat_widget.set_focus('MESSAGE_EDIT')
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def delete_message(self):
@@ -330,14 +310,14 @@ class MessageWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def quote_message(self):
-        self.chat_widget.edit_message.reply_to(self.message)
-        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+        self.chat_widget.w_edit_message.reply_to(self.message)
+        self.chat_widget.set_focus('MESSAGE_EDIT')
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def mention_author(self):
-        self.chat_widget.edit_message.edit.insert_text("<@!{0}>".format(
+        self.chat_widget.w_edit_message.edit.insert_text("<@!{0}>".format(
             self.message.author.id))
-        self.chat_widget.frame.set_focus(self.chat_widget.edit_message)
+        self.chat_widget.set_focus('MESSAGE_EDIT')
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def yank_message(self):
@@ -347,7 +327,7 @@ class MessageWidget(urwid.WidgetWrap):
     @keymaps.MESSAGE_LIST_ITEM.command
     def select_channel(self):
         self.chat_widget.set_send_channel(self.message.channel)
-        self.chat_widget.message_list.focus_message_textbox()
+        self.chat_widget.w_message_list.focus_message_textbox()
 
     class Column:
         def __init__(self,
@@ -460,66 +440,3 @@ class FakeMessage:
         self.id = "0"
 
 
-class Sidebar(urwid.WidgetWrap):
-    def __init__(self, chat_widget):
-        self.chat_widget = chat_widget
-        self.list_walker = urwid.SimpleListWalker([])
-        self.w_listbox = urwid.ListBox(self.list_walker)
-        self.update_list()
-        self.__super.__init__(urwid.Padding(self.w_listbox, left=2))
-        keymaps.GLOBAL.add_command("redraw", self.update_list)
-
-        def updlst(*args, **kwargs):
-            self.update_list()
-        self.chat_widget.discord.add_event_handler("on_member_join", updlst)
-        self.chat_widget.discord.add_event_handler("on_member_remove", updlst)
-        self.chat_widget.discord.add_event_handler("on_member_update", updlst)
-
-    def _get_user_attr(self, member):
-        if member.status == discord.Status.online:
-            return "sidebar_user_on"
-        if member.status == discord.Status.offline:
-            return "sidebar_user_off"
-        if member.status == discord.Status.idle:
-            return "sidebar_user_idle"
-
-    def mouse_event(self, size, event, button, col, row, focus):
-        if event == 'mouse press':
-            if button == 4:
-                return self.w_listbox.keypress(size, "up") is not None
-            if button == 5:
-                return self.w_listbox.keypress(size, "down") is not None
-        return self.w_listbox.mouse_event(size, event, button, col, row, focus)
-
-    def update_list(self):
-        async def callback():
-            servers = set()
-            memberset = set()
-            for ch in self.chat_widget.channels:
-                if not ch.is_private:
-                    servers.add(ch.server)
-            for serv in servers:
-                for member in serv.members:
-                    memberset.add(member)
-            items = []
-            on = []
-            idle = []
-            off = []
-            for member in memberset:
-                if member.status == discord.Status.online:
-                    on.append(member)
-                if member.status == discord.Status.offline:
-                    off.append(member)
-                if member.status == discord.Status.idle:
-                    idle.append(member)
-            members = on + idle + off
-            for member in members:
-                items.append(
-                    urwid.AttrMap(
-                        urwid.Padding(
-                            urwid.Text(member.display_name), left=1, right=1),
-                        self._get_user_attr(member),
-                        self._get_user_attr(member)))
-            self.list_walker[:] = items
-
-        self.chat_widget.discord.async(callback())

@@ -17,15 +17,11 @@ class MessageEditWidget(urwid.WidgetWrap):
         self.edit = urwid.Edit(multiline=True, allow_tab=True)
         self.edit.keypress = self._edit_keypress
         self.w_channel = urwid.Text("")
-        self.w_edit_line = urwid.Columns([('pack', self.w_channel), ('weight', 1, urwid.Padding(self.edit, left=1, right=1))])
-        self.w_typing = TypingList(self)
+        self.w_edit_line = urwid.Columns([
+            ('pack', self.w_channel),
+            ('weight', 1, urwid.Padding(self.edit, left=1, right=1))
+        ])
         self.pile = urwid.Pile([])
-        self.status_left = urwid.Text("")
-        self.status_bar = urwid.AttrMap(
-            urwid.Padding(
-                urwid.Columns([('pack', self.status_left), ('weight', 1, self.w_typing)]),
-                left=1, right=1),
-            "statusbar")
         self.hide_channel_selector()
         self.__super.__init__(self.pile)
 
@@ -58,8 +54,8 @@ class MessageEditWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def focus_message_list(self):
-        self.chat_widget.message_list.scroll_to_bottom()
-        self.chat_widget.frame.set_focus(self.chat_widget.message_list)
+        self.chat_widget.w_message_list.scroll_to_bottom()
+        self.chat_widget.set_focus('MESSAGE_LIST')
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def insert(self, text):
@@ -76,7 +72,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         return key
 
     def edit_message(self, message):
-        self.status_left.set_text("editing")
+        self.chat_widget.w_statusbar.echo("editing")
         self.editing = message
         self.edit.set_edit_text(message.content)
         self.edit.set_edit_pos(len(self.edit.edit_text))
@@ -87,72 +83,30 @@ class MessageEditWidget(urwid.WidgetWrap):
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def cancel_edit(self):
-        self.status_left.set_text("")
+        self.chat_widget.w_statusbar.clear("editing")
         self.editing = None
         self.edit.set_edit_text("")
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def show_channel_selector(self):
         self.pile.contents = [
-            (self.status_bar, self.pile.options()),
             (self.w_edit_line, self.pile.options()),
-            (self.chat_widget.w_channel_cols, self.pile.options())
+            (self.chat_widget.w_channel_selector, self.pile.options())
         ]
-        self.pile.focus_position = 2
+        self.pile.set_focus(self.chat_widget.w_channel_selector)
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def hide_channel_selector(self):
         self.pile.contents = [
-            (self.status_bar, self.pile.options()),
             (self.w_edit_line, self.pile.options()),
         ]
-        self.pile.focus_position = 1
+        self.pile.set_focus(self.w_edit_line)
 
     @keymaps.MESSAGE_TEXT_BOX.command
     def update_text(self):
         if self.chat_widget.send_channel is not None:
-            self.set_channel_name(processing.channel_name(self.chat_widget.send_channel))
-
-
-class TypingList(urwid.WidgetWrap):
-    def __init__(self, w_edit):
-        self.w_edit = w_edit
-        self.typing = {}
-        self.w_txt = urwid.Text("", align="right")
-        self.w_edit.discord.add_event_handler("on_typing", self.on_typing)
-        self.w_edit.discord.add_event_handler("on_message", self.on_message)
-        self.update_typing()
-        self.__super.__init__(urwid.AttrMap(self.w_txt, "statusbar_typing"))
-
-    def on_typing(self, channel, user, when):
-        if channel in self.w_edit.chat_widget.channels:
-            self.typing[user.id] = {'when': datetime.datetime.utcnow(),
-                                    'user': user,
-                                    'channel': channel}
-
-    def on_message(self, message):
-        if message.author.id in self.typing.keys():
-            del self.typing[message.author.id]
-
-    def update_typing(self, loop=None, loopDat=None):
-        if loop is None:
-            loop = self.w_edit.chat_widget.ui.urwid_loop
-        now = datetime.datetime.utcnow()
-        time = now - datetime.timedelta(0, 10, 0)
-        users = []
-        rm = []
-        for typ in self.typing.values():
-            if typ['when'] < time:
-                rm.append(typ['user'].id)
-                continue
-            users.append(typ['user'].display_name)
-        for r in rm:
-            del self.typing[r]
-        if len(users) > 0:
-            self.w_txt.set_text("Typing: " + str.join(", ", users))
-        else:
-            self.w_txt.set_text("")
-        loop.set_alarm_in(0.2, self.update_typing)
+            self.set_channel_name(processing.channel_name(
+                self.chat_widget.send_channel))
 
 
 class SendChannelSelector(urwid.WidgetWrap):
@@ -186,7 +140,7 @@ class SendChannelSelector(urwid.WidgetWrap):
 
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def exit(self):
-        self.chat_widget.edit_message.hide_channel_selector()
+        self.chat_widget.w_message_edit.hide_channel_selector()
 
     @keymaps.SEND_CHANNEL_SELECTOR.command
     def delete_focused(self):
