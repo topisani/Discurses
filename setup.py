@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 INSTALL_REQUIRES = ['urwid', 'discord.py', 'pyyaml']
 
 PROJECT_DIR = dirname(__file__)
-README_FILE = join(PROJECT_DIR, 'README.md')
+README_FILE = join(PROJECT_DIR, 'README.rst')
 ABOUT_FILE = join(PROJECT_DIR, 'src', 'discurses', '__about__.py')
 
 
