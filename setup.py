@@ -1,43 +1,53 @@
 #!/usr/bin/env python3
 from os import path
-from os.path import join
+from os.path import dirname, join
 
 from pip.req import parse_requirements
 from setuptools import find_packages, setup
 
-CWD = path.abspath(path.dirname(__file__))
-
-with open(path.join(CWD, 'README.md')) as f:
-    readme = f.read()
-
-with open(path.join(CWD, 'LICENSE')) as f:
-    license = f.read()
 
 
-def requires():
-    """Parse the requirements file and generate a requirements list."""
-    install_reqs = parse_requirements(join(CWD, 'requirements', 'base.txt'),
-                                      session=False)
-    return [str(ir.req) for ir in install_reqs]
+INSTALL_REQUIRES = ['urwid', 'discord.py', 'pyyaml']
 
+PROJECT_DIR = dirname(__file__)
+README_FILE = join(PROJECT_DIR, 'README.md')
+ABOUT_FILE = join(PROJECT_DIR, 'src', 'discurses', '__about__.py')
+
+
+def get_readme():
+    with open(README_FILE) as fileobj:
+        return fileobj.read()
+
+
+def get_about():
+    about = {}
+    with open(ABOUT_FILE) as fileobj:
+        exec(fileobj.read(), about)
+    return about
+
+
+ABOUT = get_about()
 
 setup(
-    name='discurses',
-    version='0.2.5',
-    description='Discord CLI written in python, based on urwid',
-    long_description=readme,
-    author='Topisani',
-    author_email='topisani@hamsterpoison.com',
-    url='https://github.com/topisani/discurses',
-    license=license,
-    packages=find_packages(exclude=('tests', 'docs')),
-    install_requires=['urwid', 'discord.py', 'pyyaml'],
+    name=ABOUT['__title__'],
+    version=ABOUT['__version__'],
+    description=ABOUT['__summary__'],
+    long_description=get_readme(),
+    author=ABOUT['__author__'],
+    author_email=ABOUT['__email__'],
+    url=ABOUT['__uri__'],
+    license=ABOUT['__uri__'],
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
+    install_requires=INSTALL_REQUIRES,
     entry_points={
         'console_scripts': [
-            'discurses=discurses:main',
+            'discurses=discurses.__main__:main',
         ],
     },
     setup_requires=[
         'setuptools_scm'
     ],
+    python_requires='>=3.5, <4',
+    zip_safe=False,
 )
