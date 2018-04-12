@@ -7,9 +7,13 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 `Unreleased`_
 ------------------------
-* Internal refactoring
+* Internal refactoring.
+
+`0.3.0`_
+
+* Added some features.
 
 `0.2.5`_
 -------------------------
 
-* Added a CHANGELOG
+* Added a CHANGELOG.
