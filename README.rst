@@ -26,7 +26,7 @@ That one is pretty easy:
 
     $ pip3 install discurses
 
-Python 3.5 is required.
+Python 3.6 or more is required.
 
 If you’re having trouble launching the application post-install, check
 your PATH variable.

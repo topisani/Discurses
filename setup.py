@@ -48,6 +48,6 @@ setup(
     setup_requires=[
         'setuptools_scm'
     ],
-    python_requires='>=3.5, <4',
+    python_requires='>=3.6, <4',
     zip_safe=False,
 )
