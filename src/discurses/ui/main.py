@@ -6,6 +6,7 @@ import urwid
 from discurses.ui import HasModal
 from discurses.ui import ChatWindow
 from discurses import keymaps
+from discurses.__about__ import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class MainUI(HasModal):
                     "░█▀▄░▀█▀░█▀▀░█▀▀░█░█░█▀▄░█▀▀░█▀▀░█▀▀\n"
                     "░█░█░░█░░▀▀█░█░░░█░█░█▀▄░▀▀█░█▀▀░▀▀█\n"
                     "░▀▀░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀▀\n"
-                    "                              v0.2.4\n"
+                    f"                              v{__version__}\n"
                     "                                    \n"
                     "                                    \n"
                     " < Logging in... Hang tight! >      \n"

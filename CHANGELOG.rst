@@ -2,11 +2,18 @@
 Change Log
 ==========
 
-This document records all notable changes to `HTTPie <http://httpie.org>`_.
+This document records all notable changes to `Discurses <https://github.com/topisani/discurses>`_.
 This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
+`Unreleased`_
+------------------------
+* Internal refactoring.
+
+`0.3.0`_
+
+* Added some features.
 
 `0.2.5`_
 -------------------------
 
-* Added a CHANGELOG
+* Added a CHANGELOG.
