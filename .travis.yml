@@ -6,4 +6,4 @@ install:
     - python setup.py install
     - pip install -r requirements/dev.txt
 script:
-    - flake8 discurses
+    - flake8 setup.py discurses

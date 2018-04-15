@@ -3,7 +3,7 @@ Discurses
 
 |PyPI version|
 
-A CLI for discord, written in python. The name is a combination of
+A CLI for discord, written in Python. The name is a combination of
 discord and curses, as in the terminal interface library. Discurses
 doesn’t use curses, but i originally planned to. It is now built using
 urwid, a widget library which *can* use curses as a rendering engine,
@@ -24,11 +24,11 @@ That one is pretty easy:
 
 .. code:: shell
 
-    $ pip3 install discurses
+    $ pip install discurses
 
 Python 3.6 or more is required.
 
-If you’re having trouble launching the application post-install, check
+If you're having trouble launching the application post-install, check
 your PATH variable.
 
 .. code:: shell

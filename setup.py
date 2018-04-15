@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
-from os import path
 from os.path import dirname, join
-
-from pip.req import parse_requirements
 from setuptools import find_packages, setup
-
 
 
 INSTALL_REQUIRES = ['urwid', 'discord.py', 'pyyaml']
