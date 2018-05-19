@@ -8,6 +8,10 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 `Unreleased`_
 ------------------------
 
+`0.3.2`_
+
+* Update MANIFEST.in
+
 `0.3.1`_
 
 * Fix setup issue.
