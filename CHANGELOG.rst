@@ -8,9 +8,13 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 `Unreleased`_
 ------------------------
 
+`0.3.3`_
+
+* Fix README.rst file.
+
 `0.3.2`_
 
-* Update MANIFEST.in
+* Update MANIFEST.in.
 
 `0.3.1`_
 
