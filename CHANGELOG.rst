@@ -7,6 +7,10 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 `Unreleased`_
 ------------------------
+
+`0.3.1`_
+
+* Fix setup issue.
 * Internal refactoring.
 
 `0.3.0`_
