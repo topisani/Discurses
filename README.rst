@@ -78,7 +78,6 @@ Usage
 Full list available in discurses/keymaps.py…
 
 When your cursor is in the text box:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 +--------------+---------------------------+
 | Key          | Action                    |
@@ -94,8 +93,7 @@ When your cursor is in the text box:
 | esc          | cancel message            |
 +--------------+---------------------------+
 
-General Commands
-^^^^^^^^^^^^^^^^
+General Commands:
 
 +----------+--------------------+
 | Key      | Action             |
