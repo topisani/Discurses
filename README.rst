@@ -9,7 +9,7 @@ doesn’t use curses, but i originally planned to. It is now built using
 urwid, a widget library which *can* use curses as a rendering engine,
 but discurses works fine without it.
 
-Questions, bug reports, PR’s and comments are all very welcome.
+Questions, bug reports, PRs and comments are all very welcome.
 
 I can be contacted at ``topisani@hamsterpoison.com`` |Discurses chat
 view|
@@ -65,12 +65,11 @@ Authentication
 Put the file ``example_discurses.yaml`` in your ``~/.config/``
 directory, replace the placeholder with your discord token and rename
 the file to ``discurses.yaml``. You can get the token by visiting
-[https://discordapp.com/channels/@me](https://discordapp.com/channels/@me),
-opening the developer tools (Ctrl+shift+i or Command+shift+i) and Click
-on the ``Application`` tab, then on the sidebar: ``Local Storage`` then
-click the URL from the dropdown and you should see the ``token`` key
-followed by your token, copy whats inside the speech marks and put it in
-your ``.yaml`` file.
+https://discordapp.com/channels/@me, opening the developer tools
+(Ctrl+shift+i or Command+shift+i) and click on the ``Application`` tab,
+then on the sidebar: ``Local Storage`` then click the URL from the
+dropdown and you should see the ``token`` key followed by your token,
+copy what's inside the speech marks and put it in your ``.yaml`` file.
 
 Usage
 -----
