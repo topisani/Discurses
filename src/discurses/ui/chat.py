@@ -170,7 +170,7 @@ class ChatWindow(urwid.WidgetWrap, HasModal):
         def _callback(path):
             def _callback2(txt):
                 self.close_pop_up()
-                self.discord.async(
+                self.discord.async_do(
                     self.discord.send_file(
                         destination=self.send_channel, fp=path, content=txt))
 

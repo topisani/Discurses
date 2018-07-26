@@ -68,4 +68,4 @@ class MemberList(urwid.WidgetWrap):
                         self._get_user_attr(member)))
             self.list_walker[:] = items
 
-        self.chat_widget.discord.async(callback())
+        self.chat_widget.discord.async_do(callback())

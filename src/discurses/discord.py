@@ -66,7 +66,7 @@ class DiscordClient(discord.Client):
     async def login(self):
         await super().login(config.table['token'], bot=False)
 
-    def async(self, f):
+    def async_do(self, f):
         self.loop.create_task(f)
 
     async def get_logs_from(self, channel: Channel) -> List[Message]:
