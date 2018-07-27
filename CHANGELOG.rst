@@ -8,6 +8,10 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 `Unreleased`_
 ------------------------
 
+`0.3.4`_
+
+* Renamed `async` to `async_do` for Python 3.7.0 compatibility.
+
 `0.3.3`_
 
 * Fix README.rst file.
