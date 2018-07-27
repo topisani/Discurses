@@ -126,7 +126,7 @@ class MessageListWalker(urwid.MonitoredFocusList, urwid.ListWalker):
             self.is_polling = False
             callback()
 
-        self.list_widget.discord.async(_callback())
+        self.list_widget.discord.async_do(_callback())
 
     def sort_messages(self):
         st = []
@@ -295,7 +295,7 @@ class MessageWidget(urwid.WidgetWrap):
         if self.message.author == self.discord.user or \
                 self.message.channel.permissions_for(self.discord.user).\
                 manage_messages:
-            self.discord.async(self.discord.delete_message(self.message))
+            self.discord.async_do(self.discord.delete_message(self.message))
 
     @keymaps.MESSAGE_LIST_ITEM.command
     def ask_delete_message(self):

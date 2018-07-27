@@ -39,11 +39,11 @@ class MessageEditWidget(urwid.WidgetWrap):
             self.cancel_edit()
             return
         if self.editing is not None:
-            self.discord.async(
+            self.discord.async_do(
                 self.discord.edit_message(self.editing, self.edit.edit_text))
             self.cancel_edit()
         else:
-            self.discord.async(
+            self.discord.async_do(
                 self.discord.send_message(self.chat_widget.send_channel,
                                           self.edit.edit_text))
         self.edit.set_edit_text("")
@@ -67,7 +67,7 @@ class MessageEditWidget(urwid.WidgetWrap):
         key = urwid.Edit.keypress(self.edit, size, key)
         if key is None:
             if self.editing is None:
-                self.discord.async(
+                self.discord.async_do(
                     self.discord.send_typing(self.chat_widget.send_channel))
         return key
 
