@@ -14,6 +14,9 @@ Questions, bug reports, PRs and comments are all very welcome.
 I can be contacted at ``topisani@hamsterpoison.com`` |Discurses chat
 view|
 
+Contributors list can be seen in the `CONTRIBUTORS` file. If you have
+contributed to the project and do not find your name, please let us know.
+
 Installation
 ------------
 
