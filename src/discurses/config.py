@@ -7,8 +7,15 @@ CONFIG_FILE_PATH = os.path.join(
 CACHE_DIR_PATH = os.path.join(os.path.expanduser("~"), ".cache", "discurses")
 CACHE_AVATARS_PATH = os.path.join(CACHE_DIR_PATH, "avatars")
 
-with open(CONFIG_FILE_PATH, 'r') as file:
-    table = yaml.load(file)
+try:
+    with open(CONFIG_FILE_PATH, 'r') as file:
+        table = yaml.load(file)
+except FileNotFoundError:
+    print(
+        "Create an authentication configuration file {path}"
+        .format(
+            path=shlex.quote(CONFIG_FILE_PATH)))
+    raise
 
 
 def create_dir(directory):
