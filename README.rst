@@ -27,7 +27,7 @@ That one is pretty easy:
 
 .. code:: shell
 
-    $ pip install discurses
+    $ pip3 install discurses
 
 Python 3.6 or more is required.
 
