@@ -29,7 +29,7 @@ That one is pretty easy:
 
     $ pip install discurses
 
-Python 3.6 or more is required.
+Python 3.6 is required (as discord.py does not yet work with 3.7).
 
 If you're having trouble launching the application post-install, check
 your PATH variable.
@@ -48,6 +48,7 @@ part of your path. You can add it with the following command:
 Note: this is a temporary fix, you would need to add $HOME/.local/bin to
 your .profile or .bashrc to make it permanent, check your distributions
 documentation for PATH settings.
+
 
 Windows
 ~~~~~~~
@@ -73,6 +74,10 @@ https://discordapp.com/channels/@me, opening the developer tools
 then on the sidebar: ``Local Storage`` then click the URL from the
 dropdown and you should see the ``token`` key followed by your token,
 copy what's inside the speech marks and put it in your ``.yaml`` file.
+This may not be easy using the Discord webapp as there is a mechanism
+in place to delete the token from storage once the page is loaded (occurs
+when the splash screen disappears).
+
 
 Usage
 -----
