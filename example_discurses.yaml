@@ -1,2 +1,4 @@
 ---
 token: ADD_YOUR_TOKEN_HERE
+# Set this to True or False for notifications
+notify: True

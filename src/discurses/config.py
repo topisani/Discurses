@@ -64,7 +64,7 @@ async def send_notification(discord, message):
         elif PLATFORM == "Darwin":
             macos_notify(shlex.quote(nickname), shlex.quote(message.clean_content))
     else:
-        if PLATFORM == "Linux": 
+        if PLATFORM == "Linux":
             linux_notify("-i {avatar} \"{author} in {server}#{channel}\" {content}"
                          .format(
                              avatar=shlex.quote(avatar),
