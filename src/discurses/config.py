@@ -66,16 +66,10 @@ async def send_notification(discord, message):
     """
     avatar = await discord.get_avatar(message.author)
     nickname = message.author.display_name
-    if message.channel.is_private:
-        if PLATFORM == "Linux":
-            linux_notify(message, avatar, nickname)
-        elif PLATFORM == "Darwin":
-            macos_notify(message, nickname)
-    else:
-        if PLATFORM == "Linux":
-            linux_notify(message, avatar, nickname)
-        elif PLATFORM == "Darwin":
-            macos_notify(message, nickname)
+    if PLATFORM == "Linux":
+        linux_notify(message, avatar, nickname)
+    elif PLATFORM == "Darwin":
+        macos_notify(message, nickname)
 
 def file_picker(callback, chat_widget):
     """
