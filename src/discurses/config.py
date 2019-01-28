@@ -35,15 +35,30 @@ def macos_notify(title, text):
     Snippet from:
     https://stackoverflow.com/questions/17651017/python-post-osx-notification/41318195#41318195
     """
-    os.system("""
+    subprocess.Popen("""
               osascript -e 'display notification "{}" with title "{}"'
-              """.format(text, title))
+              """.format(shlex.quote(nickname), shlex.quote(message.clean_content)
 
-def linux_notify(arguments):
+def linux_notify(is_private):
     """
     Create a linux notification
     """
-    subprocess.Popen(["notify-send", arguments])
+    if is_private:
+        subprocess.Popen(["notify-send", "-i {avatar} \"{author} in chat with {users}:\" {content}"
+                             .format(
+                                 avatar=shlex.quote(avatar),
+                                 author=shlex.quote(nickname),
+                                 content=shlex.quote(message.clean_content),
+                                 users=shlex.quote(', '
+                                                   .join(a.display_name for a in message.channel.recipients)))])
+    else:
+        subprocess.Popen(["notify-send", "-i {avatar} \"{author} in {server}#{channel}\" {content}"
+                         .format(
+                             avatar=shlex.quote(avatar),
+                             author=shlex.quote(nickname),
+                             server=shlex.quote(message.server.name),
+                             channel=shlex.quote(message.channel.name),
+                             content=shlex.quote(message.clean_content))])
 
 async def send_notification(discord, message):
     """
@@ -54,26 +69,14 @@ async def send_notification(discord, message):
     nickname = message.author.display_name
     if message.channel.is_private:
         if PLATFORM == "Linux":
-            linux_notify("-i {avatar} \"{author} in chat with {users}:\" {content}"
-                         .format(
-                             avatar=shlex.quote(avatar),
-                             author=shlex.quote(nickname),
-                             content=shlex.quote(message.clean_content),
-                             users=shlex.quote(', '
-                                               .join(a.display_name for a in message.channel.recipients))))
+            linux_notify(message.channel.is_private)
         elif PLATFORM == "Darwin":
-            macos_notify(shlex.quote(nickname), shlex.quote(message.clean_content))
+            macos_notify()
     else:
         if PLATFORM == "Linux":
-            linux_notify("-i {avatar} \"{author} in {server}#{channel}\" {content}"
-                         .format(
-                             avatar=shlex.quote(avatar),
-                             author=shlex.quote(nickname),
-                             server=shlex.quote(message.server.name),
-                             channel=shlex.quote(message.channel.name),
-                             content=shlex.quote(message.clean_content)))
+            linux_notify(message.channel.is_private)
         elif PLATFORM == "Darwin":
-            macos_notify(shlex.quote(nickname), shlex.quote(message.clean_content))
+            macos_notify()
 
 def file_picker(callback, chat_widget):
     """
