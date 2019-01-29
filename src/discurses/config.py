@@ -1,11 +1,15 @@
-import yaml
 import os
 import shlex
+import platform
+import subprocess
+import yaml
 
 CONFIG_FILE_PATH = os.path.join(
     os.path.expanduser("~"), ".config", "discurses.yaml")
 CACHE_DIR_PATH = os.path.join(os.path.expanduser("~"), ".cache", "discurses")
 CACHE_AVATARS_PATH = os.path.join(CACHE_DIR_PATH, "avatars")
+
+PLATFORM = platform.system()
 
 try:
     with open(CONFIG_FILE_PATH, 'r') as file:
@@ -23,9 +27,37 @@ def create_dir(directory):
         os.makedirs(directory)
     return directory
 
-
 create_dir(CACHE_AVATARS_PATH)
 
+def macos_notify(message, nickname):
+    """
+    Create a MacOS notification
+    Snippet from:
+    https://stackoverflow.com/questions/17651017/python-post-osx-notification/41318195#41318195
+    """
+    subprocess.Popen(['osascript', "-e 'display notification '{}' with title '{}''"
+                      .format(shlex.quote(nickname), shlex.quote(message.clean_content))])
+
+def linux_notify(message, avatar, nickname):
+    """
+    Create a linux notification
+    """
+    if message.is_private:
+        subprocess.Popen(["notify-send", "-i {avatar} \"{author} in chat with {users}:\" {content}"
+                          .format(
+                              avatar=shlex.quote(avatar),
+                              author=shlex.quote(nickname),
+                              content=shlex.quote(message.clean_content),
+                              users=shlex.quote(', '
+                                                .join(a.display_name for a in message.channel.recipients)))])
+    else:
+        subprocess.Popen(["notify-send", "-i {avatar} \"{author} in {server}#{channel}\" {content}"
+                          .format(
+                              avatar=shlex.quote(avatar),
+                              author=shlex.quote(nickname),
+                              server=shlex.quote(message.server.name),
+                              channel=shlex.quote(message.channel.name),
+                              content=shlex.quote(message.clean_content))])
 
 async def send_notification(discord, message):
     """
@@ -34,24 +66,10 @@ async def send_notification(discord, message):
     """
     avatar = await discord.get_avatar(message.author)
     nickname = message.author.display_name
-    if message.channel.is_private:
-        os.system(
-            "notify-send -i {avatar} \"{author} in chat with {users}:\" {content}"
-            .format(
-                avatar=shlex.quote(avatar),
-                author=shlex.quote(nickname),
-                content=shlex.quote(message.clean_content),
-                users=shlex.quote(', '.join(a.display_name for a in message.channel.recipients))))
-    else:
-        os.system(
-            "notify-send -i {avatar} \"{author} in {server}#{channel}\" {content}"
-            .format(
-                avatar=shlex.quote(avatar),
-                author=shlex.quote(nickname),
-                server=shlex.quote(message.server.name),
-                channel=shlex.quote(message.channel.name),
-                content=shlex.quote(message.clean_content)))
-
+    if PLATFORM == "Linux":
+        linux_notify(message, avatar, nickname)
+    elif PLATFORM == "Darwin":
+        macos_notify(message, nickname)
 
 def file_picker(callback, chat_widget):
     """

@@ -7,6 +7,11 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 `Unreleased`_
 ------------------------
+`0.3.6`_
+
+* Add config option to enable and disable notifications
+* Add MacOS compatibility for notifications
+
 `0.3.5`_
 
 * Mark as Python 3.7 incompatible due to issues with discord.py

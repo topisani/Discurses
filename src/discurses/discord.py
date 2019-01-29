@@ -52,15 +52,15 @@ class DiscordClient(discord.Client):
         self.ui.on_ready()
 
     async def on_message(self, m: Message):
-        if m.channel.is_private:
+        if m.channel.is_private and config.table['notify']:
             await config.send_notification(self, m)
         else:
             ss = await self.get_server_settings(m.server)
-            if ss.should_be_notified(m):
+            if ss.should_be_notified(m) and config.table['notify']:
                 await config.send_notification(self, m)
         logger.debug("Running %d event handlers for on_message" %
                      len(self.event_handlers["on_message"]))
-        for f in self.event_handlers['on_message']:
+        for f in self.event_handlers["on_message"]:
             f(m)
 
     async def login(self):
