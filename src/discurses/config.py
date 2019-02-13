@@ -42,7 +42,7 @@ def linux_notify(message, avatar, nickname):
     """
     Create a linux notification
     """
-    if message.is_private:
+    if message.channel.is_private:
         subprocess.Popen(["notify-send", "-i {avatar} \"{author} in chat with {users}:\" {content}"
                           .format(
                               avatar=shlex.quote(avatar),
@@ -50,14 +50,18 @@ def linux_notify(message, avatar, nickname):
                               content=shlex.quote(message.clean_content),
                               users=shlex.quote(', '
                                                 .join(a.display_name for a in message.channel.recipients)))])
-    else:
-        subprocess.Popen(["notify-send", "-i {avatar} \"{author} in {server}#{channel}\" {content}"
-                          .format(
-                              avatar=shlex.quote(avatar),
-                              author=shlex.quote(nickname),
-                              server=shlex.quote(message.server.name),
-                              channel=shlex.quote(message.channel.name),
-                              content=shlex.quote(message.clean_content))])
+    else: 
+        quoteAvatar = "{avatar}".format(avatar=avatar)
+        quoteFrom = "{author} in {server}#{channel}".format(
+                author=nickname,
+                server=message.server.name,
+                channel=message.channel.name)
+        quoteMessage = "{content}".format(content=message.clean_content)
+        quoteAvatar = shlex.quote(quoteAvatar)
+        quoteFrom = shlex.quote(quoteFrom)
+        quoteMessage = shlex.quote(quoteMessage)
+        shellCmd = "notify-send -i {a} {b} {c}".format(a=quoteAvatar, b=quoteFrom, c=quoteMessage)
+        subprocess.Popen(shellCmd, shell=True)
 
 async def send_notification(discord, message):
     """
